@@ -1,0 +1,34 @@
+{
+  "name": "prp-qr-bill",
+  "version": "0.1.0",
+  "description": "SVG QR-Bill using hybrids.js",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prpsake/prp-qr-bill.git"
+  },
+  "keywords": [
+    "SVG",
+    "QR-Bill",
+    "hybrids.js"
+  ],
+  "author": "gourmetseasoningsake",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/prpsake/prp-qr-bill/issues"
+  },
+  "homepage": "https://github.com/prpsake/prp-qr-bill#readme",
+  "devDependencies": {
+    "@snowpack/plugin-postcss": "^1.4.3",
+    "postcss": "^8.3.6",
+    "snowpack": "^3.8.8",
+    "tailwindcss": "^2.2.15"
+  },
+  "peerDependencies": {
+    "hybrids": "^6.1.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "snowpack dev"
+  }
+}
