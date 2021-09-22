@@ -19,6 +19,8 @@
   },
   "homepage": "https://github.com/prpsake/prp-qr-bill#readme",
   "devDependencies": {
+    "@ampire/snowpack-plugin-plugin": "^0.1.2",
+    "glob": "^7.1.7",
     "snowpack": "^3.8.8"
   },
   "peerDependencies": {
