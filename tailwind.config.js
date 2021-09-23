@@ -21,7 +21,10 @@ module.exports = {
   purge: ['./src/**/*.js'],
   darkMode: false, // or 'media' or 'class'
   corePlugins: [
+    'preflight',
+    'display',
     'flex',
+    'flexDirection',
     'width',
     'height',
     'margin',
@@ -30,20 +33,25 @@ module.exports = {
     'borderColor',
     'borderWidth',
     'borderStyle',
-    'textColor',
-    'lineHeight',
+    'fontFamily',
     'fontSize',
     'fontWeight',
+    'textColor',
+    'lineHeight',
   ],
   theme: {
     screens: {
       'print': {'raw': 'print'},
     },
     spacing: {
-      '5': '5mm'
+      '5': '5mm',
     },
     width: fromArray('mm', [210, 148, 92, 87, 62, 52, 51, 46]),
     height: fromArray('mm', [105, 95, 56, 46, 22, 18, 14, 10, 7]),
+    margin: {
+      'line-9': '9pt',
+      'line-11': '11pt'
+    },
     colors: {
       black: '#000',
       white: '#fff',
@@ -51,12 +59,21 @@ module.exports = {
     borderWidth: {
       DEFAULT: '1pt'
     },
-    lineHeight: fromArray('pt', [8, 9, 11, 13]),
+    borderStyle: {
+      solid: 'solid',
+    },
+    fontFamily: {
+      sans: ['LiberationSans', 'Helvetica', 'Arial', 'sans-serif']
+    },
     fontSize: fromArray('pt', [6, 7, 8, 10, 11]),
     fontWeight: {
       normal: '400',
       bold: '700',
-    }
+    },
+    lineHeight: {
+      'none': '1',
+      ...fromArray('pt', [8, 9, 11, 13])
+    },
   },
   variants: {},
   plugins: [],

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  
+  <style>
+    @font-face {
+      font-family: LiberationSans;
+      src: url('fonts/LiberationSans-Regular.woff') format('woff');
+      font-style: normal;
+      font-weight: 400;
+    }
+
+    @font-face {
+      font-family: LiberationSans;
+      src: url('fonts/LiberationSans-Bold.woff') format('woff');
+      font-style: normal;
+      font-weight: 700;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+    }
+  </style>
+
+</head>
+<body>
+
+  <a-qr-bill iban="CH00000000000000000000"></a-qr-bill>
+
+  <script type="module" src="_dist/index.js"></script>
+</body>
+</html>
