@@ -36,7 +36,7 @@ const AQRBill = {
 
   }) => html`
 
-    <div class="receipt">
+    <div class="w-62 p-5 border-r border-solid border-black">
       <div class="title">${receiptTitle}</div>
       <div class="information">
         <div class="heading">${receiptInformationHeading}</div>
@@ -48,7 +48,7 @@ const AQRBill = {
       <div class="acceptance-point"></div>
     </div>
 
-    <div class="payment-part"></div>
+    <div class="payment-part w-148"></div>
 
   `.style(styles)
 }

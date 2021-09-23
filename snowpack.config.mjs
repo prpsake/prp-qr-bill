@@ -1,4 +1,4 @@
-import { promises as fs } from 'fs'
+import execa from 'execa'
 
 
 export default {
@@ -12,8 +12,8 @@ export default {
       input: ['.css'],
       output: ['.js'],
       load: async ({ isDev, filePath}) => {
-        const content = await fs.readFile(filePath, 'utf8')
-        return `export default ${JSON.stringify(content)}`
+        const cmd = await execa.command(`postcss ${filePath}`)
+        return `export default ${JSON.stringify(cmd.stdout)}`
       }
     }]
   ],
