@@ -34,7 +34,21 @@
 </head>
 <body>
 
-  <a-qr-bill iban="CH00000000000000000000" lang="en"></a-qr-bill>
+  <a-qr-bill
+    version="1a"
+    lang="en"
+    iban="CH00000000000000000000"
+    creditor-full-name="Kat Kitty"
+    creditor-street-plot="Einestrasse 1"
+    creditor-postcode-locality="0000 Einestadt"
+    reference="RF18539007547034"
+    reference_="210000000003139471430009017"
+    debtor-full-name="Dog Dodger"
+    debtor-street-plot="Anderestrasse 1"
+    debtor-postcode-locality="0001 Anderestadt"
+    currency="CHF"
+    amount="143250">
+  </a-qr-bill>
 
   <script type="module" src="_dist/index.js"></script>
 </body>

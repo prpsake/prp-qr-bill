@@ -33,6 +33,8 @@ module.exports = {
     'borderColor',
     'borderWidth',
     'borderStyle',
+    'stroke',
+    'textAlign',
     'fontFamily',
     'fontSize',
     'fontWeight',
@@ -46,7 +48,7 @@ module.exports = {
     spacing: {
       '5': '5mm',
     },
-    width: fromArray('mm', [210, 148, 92, 87, 62, 52, 51, 46]),
+    width: fromArray('mm', [210, 148, 92, 87, 62, 52, 51, 46, 22]),
     height: fromArray('mm', [105, 95, 56, 46, 22, 18, 14, 10, 7]),
     margin: {
       'line-9': '9pt',
@@ -61,6 +63,9 @@ module.exports = {
     },
     borderStyle: {
       solid: 'solid',
+    },
+    stroke: {
+      current: 'currentColor',
     },
     fontFamily: {
       sans: ['LiberationSans', 'Helvetica', 'Arial', 'sans-serif']
