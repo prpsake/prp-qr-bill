@@ -12,6 +12,11 @@
 
   3: IBAN
      w/o reference
+
+
+  Links:
+
+  https://www.paymentstandards.ch/de/shared/communication-grid.html
 */
 
 
@@ -167,19 +172,20 @@ const setBoolFromVersions =
    too thin compared to the example in the guide.
 */
 const blankFieldSVG = 
-  (width, height) => html`
+  (width, height, styles = {}) => html`
     <svg 
       viewBox="0 0 ${width} ${height}"
       fill="none"
       class="block text-black stroke-current"
       style=${{
         width: `${width}mm`,
-        height: `${height}mm`
+        height: `${height}mm`,
+        ...styles
       }}>
-      <path d="M 3,0 h -3 v 3" stroke-width="0.4"/>
-      <path d="M ${width - 3},0 h 3 v 3" stroke-width="0.4"/>
-      <path d="M 3,${height} h -3 v -3" stroke-width="0.4"/>
-      <path d="M ${width - 3},${height} h 3 v -3" stroke-width="0.4"/>
+      <path d="M 3,0 h -3 v 3" stroke-width="0.5"/>
+      <path d="M ${width - 3},0 h 3 v 3" stroke-width="0.5"/>
+      <path d="M 3,${height} h -3 v -3" stroke-width="0.5"/>
+      <path d="M ${width - 3},${height} h 3 v -3" stroke-width="0.5"/>
     </svg>
   `
 
@@ -235,7 +241,7 @@ const AQRBill = {
 
   }) => html`
 
-    <div class="flex flex-col w-62 p-5 border-r">
+    <div class="flex flex-col w-62 p-5">
 
       <div class="h-7 font-bold text-11 leading-none">${lang.receiptTitle}</div>
 
@@ -255,19 +261,16 @@ const AQRBill = {
           </div>     
         `}
 
-        ${showBlanks ? html`
-          <div class="font-bold text-6 leading-9">${lang.debtorFieldHeading}</div>
-          ${blankFieldSVG(52, 20)}
-    
-        ` : html`
-          <div class="font-bold text-6 leading-9">${lang.debtorHeading}</div>
+        <div class="font-bold text-6 leading-9">
+          ${showBlanks ? lang.debtorFieldHeading : lang.debtorHeading}
+        </div>
+        ${showBlanks ? blankFieldSVG(52, 20, { marginTop: '.8pt' }) : html`
           <div class="text-8 leading-9">
             <div>${debtorFullName}</div>
             ${!reduceContent && html`<div>${debtorStreetPlot}</div>`}
             <div>${debtorPostcodeLocality}</div>
           </div>
         `}
-
       </div>
 
       <div class="h-14 flex">
@@ -278,7 +281,7 @@ const AQRBill = {
 
         <div class=${{ 'flex-grow': true, flex: showBlanks }}>
           <div class="font-bold text-6 leading-9">${lang.amountHeading}</div>
-          ${showBlanks ? blankFieldSVG(30, 10) : html`
+          ${showBlanks ? blankFieldSVG(30, 10, { marginTop: '2pt', marginLeft: '4pt' }) : html`
             <div class="text-8 leading-9">${amount}</div>
           `}
         </div>
@@ -287,7 +290,46 @@ const AQRBill = {
       <div class="h-18 font-bold text-6 text-right">${lang.acceptancePointHeading}</div>
     </div>
 
-    <div class="w-148"></div>
+    <div class="flex flex-col w-148 p-5">
+      <div class="h-85 flex">
+        <div class="w-51">
+          <div class="h-7 font-bold text-11 leading-none">${lang.paymentPartTitle}</div>
+          <div class="h-56 py-5 pr-5"></div>
+        </div>
+
+        <div class="w-87">
+          <div class="font-bold text-8 leading-11">${lang.creditorHeading}</div>
+          <div class="text-10 leading-11 mb-line-11">
+            <div>${iban}</div>
+            <div>${creditorFullName}</div>
+            ${!reduceContent && html`<div>${creditorStreetPlot}</div>`}
+            <div>${creditorPostcodeLocality}</div>
+          </div>
+
+          ${showReference && reference && html`
+            <div class="font-bold text-8 leading-11">${lang.referenceHeading}</div>
+            <div class="text-10 leading-11 mb-line-11">
+              <div>${reference}</div>
+            </div>     
+          `}
+
+
+
+          <div class="font-bold text-8 leading-11">
+            ${showBlanks ? lang.debtorFieldHeading : lang.debtorHeading}
+          </div>
+          ${showBlanks ? blankFieldSVG(65, 25, { marginTop: '1.1pt' }) : html`
+            <div class="text-10 leading-11">
+              <div>${debtorFullName}</div>
+              ${!reduceContent && html`<div>${debtorStreetPlot}</div>`}
+              <div>${debtorPostcodeLocality}</div>
+            </div>
+          `}
+        </div>
+
+      </div>
+      <div class="h-10"></div>
+    </div>
 
   `.style(styles)
 }

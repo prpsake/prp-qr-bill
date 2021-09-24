@@ -6,7 +6,7 @@
 
 @layer base {
   :host {
-    @apply flex w-210 h-105 bg-white border border-solid border-black font-sans font-normal text-black;
+    @apply flex w-210 h-105 bg-white font-sans font-normal text-black;
   }
   
   :host * {
