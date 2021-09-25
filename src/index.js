@@ -18,6 +18,8 @@
 
   https://www.paymentstandards.ch/dam/downloads/style-guide-en.pdf
   https://www.paymentstandards.ch/de/shared/communication-grid.html
+  https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-de.pdf
+  - Datatypes: page 27
 */
 
 
