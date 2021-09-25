@@ -16,6 +16,7 @@
 
   Links:
 
+  https://www.paymentstandards.ch/dam/downloads/style-guide-en.pdf
   https://www.paymentstandards.ch/de/shared/communication-grid.html
 */
 
@@ -211,7 +212,10 @@ const AQRBill = {
   currency: '', // CHF | EUR
   amount: property(moneyFromScaledIntStr2), // integer string
 
+  additionalInfo: '', // string (NB: Notification / Bill information)
+
   showReference: setBoolFromVersions(['1a', '1b', '2a', '2b']),
+  showAdditionalInfo: setBoolFromVersions(['1a', '1b', '2a', '2b']),
   showBlanks: setBoolFromVersions(['3b']),
 
   reduceContent: false,
@@ -234,7 +238,10 @@ const AQRBill = {
     currency,
     amount,
 
+    additionalInfo,
+
     showReference,
+    showAdditionalInfo,
     showBlanks,
 
     reduceContent
@@ -294,7 +301,33 @@ const AQRBill = {
       <div class="h-85 flex">
         <div class="w-51">
           <div class="h-7 font-bold text-11 leading-none">${lang.paymentPartTitle}</div>
+
           <div class="h-56 py-5 pr-5"></div>
+
+          ${showBlanks ? html`
+            <div class="h-22">
+              <div class="flex font-bold text-8 leading-11">
+                <div class="mr-line-7">${lang.currencyHeading}</div>
+                <div>${lang.amountHeading}</div>
+              </div>
+              <div class="flex">
+                <div class="text-10 leading-11 mr-line-9">${currency}</div>
+               ${blankFieldSVG(40, 15, { marginTop: '1.6pt' })}
+              </div>
+            </div>
+          ` : html`
+            <div class="h-22 flex">
+              <div class="flex-shrink w-22">
+                <div class="font-bold text-8 leading-11">${lang.currencyHeading}</div>
+                <div class="text-10 leading-11">${currency}</div>
+              </div>
+
+              <div class="flex-grow">
+                <div class="font-bold text-8 leading-11">${lang.amountHeading}</div>
+                <div class="text-10 leading-11">${amount}</div>
+              </div>
+            </div>
+          `}
         </div>
 
         <div class="w-87">
@@ -313,7 +346,12 @@ const AQRBill = {
             </div>     
           `}
 
-
+          ${showAdditionalInfo && additionalInfo && html`
+            <div class="font-bold text-8 leading-11">${lang.additionalInfoHeading}</div>
+            <div class="text-10 leading-11 mb-line-11">
+              <div>${additionalInfo}</div>
+            </div>     
+          `}
 
           <div class="font-bold text-8 leading-11">
             ${showBlanks ? lang.debtorFieldHeading : lang.debtorHeading}
