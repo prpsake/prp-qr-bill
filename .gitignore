@@ -2,3 +2,22 @@
 
 /node_modules/
 #/public/
+/test/
+/build/
+/dist/
+/coverage/
+
+
+
+/lib/
+/src/**/*.bs.js
+.bsb.lock
+.merlin
+
+
+
+.env
+
+
+
+.DS_Store
