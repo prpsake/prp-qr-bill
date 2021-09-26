@@ -24,6 +24,7 @@
 
 
 import { define, html, property } from 'hybrids'
+import { blockStr3, blockStr4, blockStr5 } from './Helpers.bs.js'
 import styles from './index.a.css'
 
 
@@ -96,25 +97,6 @@ const translations = {
 const translate = 
   lang => 
   translations[lang] || translations.en
-
-
-
-const blockStr =
-  len =>
-  str => {
-    if (str === undefined) return ''
-    return (
-      str
-      .replace(/\s/g, '')
-      .replace(RegExp(`\\S{${len}}`, 'g'), '$& ')
-      .trim()
-    )
-  }
-
-
-const blockStr3 = blockStr(3)
-const blockStr4 = blockStr(4)
-const blockStr5 = blockStr(5)
 
 
 

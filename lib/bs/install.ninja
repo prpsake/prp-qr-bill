@@ -1,0 +1,10 @@
+rescript = 1
+rule cp
+  command = cp $i $out
+rule touch
+ command = touch $out
+o Helpers.cmi : cp ../bs/src/Helpers.cmi
+o Helpers.cmj : cp ../bs/src/Helpers.cmj
+o Helpers.cmt : cp ../bs/src/Helpers.cmt
+o Helpers.res : cp ../../src/Helpers.res
+build install.stamp : touch Helpers.cmi Helpers.cmj 

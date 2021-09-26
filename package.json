@@ -33,6 +33,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "snowpack dev"
+    "start": "snowpack dev",
+    "re:start": "rescript build -w",
+    "re:build": "rescript"
   }
 }
