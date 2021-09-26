@@ -24,7 +24,10 @@
 
 
 import { define, html, property } from 'hybrids'
-import { blockStr3, blockStr4, blockStr5 } from './Helpers.bs.js'
+import { 
+  blockStr4, 
+  referenceBlockStr,
+  moneyFromScaledIntStr2 } from './Helpers.bs.js'
 import styles from './index.a.css'
 
 
@@ -97,47 +100,6 @@ const translations = {
 const translate = 
   lang => 
   translations[lang] || translations.en
-
-
-
-const referenceBlockStr =
-  str => {
-    if (str === undefined) return ''
-    const strTrim = str.trim()
-    if (strTrim.startsWith('RF')) {
-      return blockStr4(strTrim)
-    }
-    return (
-      strTrim.substring(0, 2) + ' ' +
-      blockStr5(strTrim.substring(2))
-    )
-  }
-
-
-
-const moneyFromScaledIntStr =
-  scale =>
-  str => {
-    if (str === undefined) return ''
-    const strTrim = str.trim()
-    return (
-      blockStr3(
-        strTrim
-        .slice(0, -(scale))
-        .split('')
-        .reverse()
-        .join('')
-      )
-      .split('')
-      .reverse()
-      .join('') + '.' +
-      strTrim.slice(-(scale))
-    )
-  }
-
-
-
-const moneyFromScaledIntStr2 = moneyFromScaledIntStr(2)
 
 
 
