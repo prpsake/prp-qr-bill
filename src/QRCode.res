@@ -28,8 +28,8 @@ let headerV0200: header = {
 type creditorInfo = {iban: string}
 
 // Cdtr, UltmtCdtr (for future use), UltmtDbtr
-""
-type addressType = [#S | #K | #]
+
+type addressType = [#S | #K | #""]
 
 type address = {
   addressType: addressType,
@@ -42,7 +42,7 @@ type address = {
 }
 
 let ultimateCreditorEmpty: address = {
-  addressType: #,
+  addressType: #"",
   name: "",
   streetOrAddressLine1: "",
   plotOrAddressLine2: "",
