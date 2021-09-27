@@ -1,0 +1,14 @@
+# config
+
+*.config.js -linguist-detectable
+*.config.mjs -linguist-detectable
+*.config.json -linguist-detectable
+bsconfig.json -linguist-detectable
+package.json -linguist-detectable
+package-lock.json -linguist-detectable
+
+
+
+# tests
+
+*.spec.js -linguist-detectable
