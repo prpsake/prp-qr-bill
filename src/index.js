@@ -26,10 +26,7 @@
 import { define, html, property } from 'hybrids'
 import { setBoolFromVersions } from './Factories.js'
 import { translate } from './Translations.bs.js'
-import { 
-  blockStr4, 
-  referenceBlockStr,
-  moneyFromScaledIntStr2 } from './Helpers.bs.js'
+import { blockStr4, referenceBlockStr, moneyFromScaledIntStr2 } from './Helpers.bs.js'
 import styles from './index.a.css'
 
 
