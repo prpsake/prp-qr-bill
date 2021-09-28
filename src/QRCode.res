@@ -29,7 +29,7 @@ type creditorInfo = {iban: string}
 
 // Cdtr, UltmtCdtr (for future use), UltmtDbtr
 
-type addressType = [#S | #K | #""]
+type addressType = [#S | #K | #EMPTY]
 
 type address = {
   addressType: addressType,
@@ -42,7 +42,7 @@ type address = {
 }
 
 let ultimateCreditorEmpty: address = {
-  addressType: #"",
+  addressType: #EMPTY,
   name: "",
   streetOrAddressLine1: "",
   plotOrAddressLine2: "",
