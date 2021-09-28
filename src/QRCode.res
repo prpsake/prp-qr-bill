@@ -5,11 +5,14 @@ https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-en.pdf#page=28
 
 */
 
+
+
 // Header
 
 type qrType = [#SPC]
 type version = [#"0200"]
 type coding = [#1]
+
 
 type header = {
   qrType: qrType, // QRType
@@ -17,19 +20,25 @@ type header = {
   encoding: coding, // Coding
 }
 
+
 let headerV0200: header = {
   qrType: #SPC,
   version: #"0200",
   encoding: #1,
 }
 
+
+
 // CdtrInf
 
 type creditorInfo = {iban: string}
 
+
+
 // Cdtr, UltmtCdtr (for future use), UltmtDbtr
 
 type addressType = [#S | #K | #EMPTY]
+
 
 type address = {
   addressType: addressType,
@@ -41,6 +50,7 @@ type address = {
   countrycode: string,
 }
 
+
 let ultimateCreditorEmpty: address = {
   addressType: #EMPTY,
   name: "",
@@ -51,27 +61,36 @@ let ultimateCreditorEmpty: address = {
   countrycode: "",
 }
 
+
+
 // CcyAmt
 
 type currency = [#CHF | #EUR]
+
 
 type money = {
   amount: float,
   currency: currency,
 }
 
+
+
 // RmtInf
 
 type referenceType = [#QRR | #SCOR | #NON]
+
 
 type reference = {
   referenceType: referenceType,
   referenceCode: string,
 }
 
+
+
 // AddInf
 
 type trailer = [#EPD]
+
 
 type additionalInfo = {
   unstructured: string,
@@ -79,12 +98,16 @@ type additionalInfo = {
   structured: string,
 }
 
+
+
 // AltPmtInf
 
 type alternativeInfo = {
   paramLine1: string,
   paramLine2: string,
 }
+
+
 
 // QR Code Data
 
@@ -99,6 +122,7 @@ type qrCodeData = {
   additionalInfo: additionalInfo,
   alternativeInfo: alternativeInfo,
 }
+
 
 let toString: qrCodeData => string = d =>
   Js.Array2.joinWith(
