@@ -137,14 +137,29 @@ type qrCodeData = {
 
 
 
+type validationError<'a> =
+  {
+    subject: string,
+    message: string,
+    value: 'a,
+    displayValue: string
+  }
+
+
+
 type validationResult<'a> = 
   | Ok(string)
-  | Error({
-      subject: string,
-      message: string,
-      value: 'a,
-      displayValue: string
-    })
+  | Error(validationError<'a>)
+
+
+
+
+let valueFromValidationResult: validationResult<'a> => 'b =
+  x =>
+  switch x {
+  | Ok(x) => x
+  | Error(err) => err.displayValue
+  }
 
 
 
@@ -152,44 +167,79 @@ type validationResult<'a> =
 // - param predicate function
 // - param error record
 // - return x or err displayValue (string)
-let validString: string => validationResult<'a> =
-  x =>
+let validString:
+  (
+    ~subject: string,
+    ~matchFn: (string => option<array<string>>),
+    ~message: string,
+    ~displayValue: string,
+    string
+  ) => string =
+  (
+    ~subject: string,
+    ~matchFn: (string => option<array<string>>),
+    ~message: string,
+    ~displayValue: string,
+    x: string
+  ) =>
   switch Js.Types.classify(x) {
   | JSString(x) => 
-    let x_ = Js.String2.replaceByRe(x, %re("/\s/g"), "")
-    switch Js.String2.match_(x_, %re("/^(CH|LI)[0-9]{19}$/")) {
+    switch matchFn(x) {
     | Some(match) => Ok(match[0])
-    | None =>
-      Error({
-        subject: "IBAN",
-        message: "must start with countrycode CH or LI followed by 19 digits (ex. CH1234567890123456789)",
+    | None => Error({
+        subject,
+        message,
         value: x,
-        displayValue: ""
+        displayValue
       })
     }
   | _ => 
     Error({
-      subject: "IBAN",
+      subject,
       message: "is not a string",
       value: x,
       displayValue: ""
     })
   }
+  -> valueFromValidationResult
+
+
+
+let removeWhitespace: string => string =
+  Js.String.replaceByRe(%re("/\s/g"), "")
 
 
 
 let validate: qrCodeData => array<string> =
-  d =>
-  
-  [
-    (header.qrType :> string),
-    (header.version :> string),
-    Js.Int.toString((header.encoding :> int)),
-    switch validString(d.creditorInfo.iban) {
-    | Ok(x) => x
-    | Error(err) => err.displayValue
-    }
-  ]
+  d => {
+    open Js.String2
+    [
+      (header.qrType :> string),
+      (header.version :> string),
+      Js.Int.toString((header.encoding :> int)),
+      validString(
+        ~subject="creditorInfo.iban",
+        ~matchFn= x => removeWhitespace(x) -> match_(%re("/^(CH|LI)[0-9]{19}$/")), 
+        ~message="must start with countrycode CH or LI followed by 19 digits (ex. CH1234567890123456789)",
+        ~displayValue="",
+        d.creditorInfo.iban
+      ),
+      validString(
+        ~subject="creditor.addressType",
+        ~matchFn= x => removeWhitespace(x) -> match_(%re("/^(K|S){1}$/")), 
+        ~message="must be either K or S",
+        ~displayValue="",
+        (d.creditor.addressType :> string)
+      ),
+      validString(
+        ~subject="creditor.name",
+        ~matchFn= x => trim(x) -> match_(%re("/^[\s\S]{1,70}$/")), 
+        ~message="must not be empty and at most 70 characters long",
+        ~displayValue="",
+        d.creditor.name
+      )
+    ]
+  }
 
 
 
