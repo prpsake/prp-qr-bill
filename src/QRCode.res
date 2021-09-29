@@ -2,6 +2,7 @@
 
 Links:
 https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-en.pdf#page=28
+https://regex101.com/
 
 */
 
@@ -34,7 +35,7 @@ type creditorInfo = {iban: string}
 
 
 
-// Cdtr, UltmtDbtr
+// Cdtr(, UltmtDbtr)
 
 type addressType = [#S | #K]
 
@@ -51,7 +52,9 @@ type address = {
 }
 
 
+
 // UltmtCdtr (use type address when used in future)
+
 type ultimateCreditorAddress = {
   addressType: string,
   name: string,
@@ -121,7 +124,7 @@ type alternativeInfo = {
 
 
 
-// QR Code Data
+// QR Code Data Rec
 
 type qrCodeData = {
   header: header,
@@ -129,13 +132,15 @@ type qrCodeData = {
   creditor: address,
   ultimateCreditor: address,
   money: money,
-  ultimateDebtor: address,
+  ultimateDebtor: ultimateCreditorAddress,
   referenceInfo: reference,
   additionalInfo: additionalInfo,
   alternativeInfo: alternativeInfo,
 }
 
 
+
+// Validation
 
 type validationError<'a> =
   {
@@ -146,12 +151,9 @@ type validationError<'a> =
   }
 
 
-
 type validationResult<'a> = 
   | Ok(string)
   | Error(validationError<'a>)
-
-
 
 
 let valueFromValidationResult: validationResult<'a> => 'b =
@@ -162,11 +164,6 @@ let valueFromValidationResult: validationResult<'a> => 'b =
   }
 
 
-
-// TODO: make this more generic:
-// - param predicate function
-// - param error record
-// - return x or err displayValue (string)
 let validString:
   (
     ~subject: string,
@@ -204,10 +201,8 @@ let validString:
   -> valueFromValidationResult
 
 
-
 let removeWhitespace: string => string =
   Js.String.replaceByRe(%re("/\s/g"), "")
-
 
 
 let validate: qrCodeData => array<string> =
@@ -237,11 +232,20 @@ let validate: qrCodeData => array<string> =
         ~message="must not be empty and at most 70 characters long",
         ~displayValue="",
         d.creditor.name
+      ),
+      validString(
+        ~subject="creditor.streetOrAddressLine1",
+        ~matchFn= x => trim(x) -> match_(%re("/^[\s\S]{0,70}$/")), 
+        ~message="must be at most 70 characters long",
+        ~displayValue="",
+        d.creditor.streetOrAddressLine1
       )
     ]
   }
 
 
+
+// No Validation
 
 let toString: qrCodeData => string = 
   d =>
