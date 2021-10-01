@@ -34,23 +34,38 @@
 </head>
 <body>
 
-  <a-qr-bill
-    version="1a"
-    lang="en"
-    iban="CH00000000000000000000"
-    creditor-full-name="Kat Kitty"
-    creditor-street-plot="Einestrasse 1"
-    creditor-postcode-locality="0000 Einestadt"
-    reference="RF18539007547034"
-    reference_="210000000003139471430009017"
-    debtor-full-name="Dog Dodger"
-    debtor-street-plot="Anderestrasse 1"
-    debtor-postcode-locality="0001 Anderestadt"
-    currency="CHF"
-    amount="143250"
-    additional-info="Rechnung #02021">
+  <a-qr-bill 
+    id="qr-bill" 
+    version="1a">
   </a-qr-bill>
 
   <script type="module" src="_dist/index.js"></script>
+  <script>
+    document
+    .getElementById('qr-bill')
+    .data = JSON.stringify({
+      lang: "fr",
+      currency: "CHF",
+      amount: "143250",
+      iban: "CH1234567890123456789",
+      reference: "RF18539007547034",
+      creditor: {
+        name: "Kat Kitty",
+        street: "Einerstrasse",
+        streetNumber: "1E",
+        postOfficeBox: "Postfach 8888",
+        postalCode: "1111",
+        locality: "Einerstadt",
+        countryCode: "CH"
+      },
+      debtor: {
+        name: "Dog Dodgy",
+        street: "Zweierstrasse 2",
+        locality: "2222 Zweierstadt",
+        countryCode: "CH"
+      },
+      additionalInfo: "Rechnung #02021"
+    })
+  </script>
 </body>
 </html>

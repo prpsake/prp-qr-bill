@@ -24,10 +24,11 @@
 
 
 import { define, html, property } from 'hybrids'
-import { setBoolFromVersions } from './Factories.js'
+import { setPropsFromData, setBoolFromVersions } from './Factories.js'
 import { translate } from './Translations.bs.js'
 import { blockStr4, referenceBlockStr, moneyFromScaledIntStr2 } from './Helpers.bs.js'
 import styles from './index.a.css'
+
 
 
 
@@ -36,7 +37,7 @@ import styles from './index.a.css'
    Style-guide states 0.75pt which is 0.2635 or so, but looks
    too thin compared to the example in the guide.
 */
-const blankFieldSVG = 
+const blankField = 
   (width, height, styles = {}) => html`
     <svg 
       viewBox="0 0 ${width} ${height}"
@@ -56,25 +57,47 @@ const blankFieldSVG =
 
 
 
+const addressLines =
+  props =>
+  props.addressType === 'K' ? html`
+    ${!props.reduceContent && html`<div>${props.street}</div>`}
+    <div>${props.locality}</div>
+  ` : html`
+    ${!props.reduceContent && html`<div>${props.street} ${props.streetNumber}</div>`}
+    <div>${props.postalCode} ${props.locality}</div>
+  `
+
+
+
 const AQRBill = {
   tag: 'a-qr-bill',
+  data: setPropsFromData(),
 
   version: '',
   lang: property(translate), // en | de | fr | it, defaults en
 
-  iban: property(blockStr4), // QRIBAN | IBAN
-  creditorFullName: '',
-  creditorStreetPlot: '',
-  creditorPostcodeLocality: '',
-
-  reference: property(referenceBlockStr), // QRR | SCOR | None, None omits
-
-  debtorFullName: '',
-  debtorStreetPlot: '',
-  debtorPostcodeLocality: '',
-
   currency: '', // CHF | EUR
   amount: property(moneyFromScaledIntStr2), // integer string
+  iban: property(blockStr4), // QRIBAN | IBAN
+  reference: property(referenceBlockStr), // QRR | SCOR | None, None omits
+
+  creditorAddressType: '',
+  creditorName: '',
+  creditorStreet: '',
+  creditorStreetNumber: '',
+  creditorPostOfficeBox: '',
+  creditorPostalCode: '',
+  creditorLocality: '',
+  creditorCountryCode: '',
+
+  debtorAddressType: '',
+  debtorName: '',
+  debtorStreet: '',
+  debtorStreetNumber: '',
+  debtorPostOfficeBox: '',
+  debtorPostalCode: '',
+  debtorLocality: '',
+  debtorCountryCode: '',
 
   additionalInfo: '', // string (NB: Notification / Bill information)
 
@@ -85,22 +108,30 @@ const AQRBill = {
   reduceContent: false,
 
   render: ({
-
     lang,
-
-    iban,
-    creditorFullName,
-    creditorStreetPlot,
-    creditorPostcodeLocality,
-
-    reference,
-
-    debtorFullName,
-    debtorStreetPlot,
-    debtorPostcodeLocality,
 
     currency,
     amount,
+    iban,
+    reference,
+
+    creditorAddressType,
+    creditorName,
+    creditorStreet,
+    creditorStreetNumber,
+    creditorPostOfficeBox,
+    creditorPostalCode,
+    creditorLocality,
+    //creditorCountryCode,
+
+    debtorAddressType,
+    debtorName,
+    debtorStreet,
+    debtorStreetNumber,
+    debtorPostOfficeBox,
+    debtorPostalCode,
+    debtorLocality,
+    //debtorCountryCode,
 
     additionalInfo,
 
@@ -111,7 +142,7 @@ const AQRBill = {
     reduceContent
 
   }) => html`
-
+    ${console.log("updated")}
     <div class="flex flex-col w-62 p-5">
 
       <div class="h-7 font-bold text-11 leading-none">${lang.receiptTitle}</div>
@@ -120,26 +151,40 @@ const AQRBill = {
         <div class="font-bold text-6 leading-9">${lang.creditorHeading}</div>
         <div class="text-8 leading-9 mb-line-9">
           <div>${iban}</div>
-          <div>${creditorFullName}</div>
-          ${!reduceContent && html`<div>${creditorStreetPlot}</div>`}
-          <div>${creditorPostcodeLocality}</div>
+          <div>${creditorName}</div>
+          ${addressLines({
+            addressType: creditorAddressType,
+            street: creditorStreet, 
+            streetNumber: creditorStreetNumber,
+            postOfficeBox: creditorPostOfficeBox,
+            postalCode: creditorPostalCode,
+            locality: creditorLocality,
+            reduceContent
+          })}
         </div>
 
         ${showReference && reference && html`
           <div class="font-bold text-6 leading-9">${lang.referenceHeading}</div>
           <div class="text-8 leading-9 mb-line-9">
             <div>${reference}</div>
-          </div>     
+          </div>
         `}
 
         <div class="font-bold text-6 leading-9">
           ${showBlanks ? lang.debtorFieldHeading : lang.debtorHeading}
         </div>
-        ${showBlanks ? blankFieldSVG(52, 20, { marginTop: '.8pt' }) : html`
+        ${showBlanks ? blankField(52, 20, { marginTop: '.8pt' }) : html`
           <div class="text-8 leading-9">
-            <div>${debtorFullName}</div>
-            ${!reduceContent && html`<div>${debtorStreetPlot}</div>`}
-            <div>${debtorPostcodeLocality}</div>
+            <div>${debtorName}</div>
+            ${addressLines({
+              addressType: debtorAddressType,
+              street: debtorStreet, 
+              streetNumber: debtorStreetNumber,
+              postOfficeBox: debtorPostOfficeBox,
+              postalCode: debtorPostalCode,
+              locality: debtorLocality,
+              reduceContent
+            })}
           </div>
         `}
       </div>
@@ -152,7 +197,7 @@ const AQRBill = {
 
         <div class=${{ 'flex-grow': true, flex: showBlanks }}>
           <div class="font-bold text-6 leading-9">${lang.amountHeading}</div>
-          ${showBlanks ? blankFieldSVG(30, 10, { marginTop: '2pt', marginLeft: '4pt' }) : html`
+          ${showBlanks ? blankField(30, 10, { marginTop: '2pt', marginLeft: '4pt' }) : html`
             <div class="text-8 leading-9">${amount}</div>
           `}
         </div>
@@ -176,7 +221,7 @@ const AQRBill = {
               </div>
               <div class="flex">
                 <div class="text-10 leading-11 mr-line-9">${currency}</div>
-               ${blankFieldSVG(40, 15, { marginTop: '1.6pt' })}
+               ${blankField(40, 15, { marginTop: '1.6pt' })}
               </div>
             </div>
           ` : html`
@@ -198,16 +243,22 @@ const AQRBill = {
           <div class="font-bold text-8 leading-11">${lang.creditorHeading}</div>
           <div class="text-10 leading-11 mb-line-11">
             <div>${iban}</div>
-            <div>${creditorFullName}</div>
-            ${!reduceContent && html`<div>${creditorStreetPlot}</div>`}
-            <div>${creditorPostcodeLocality}</div>
+            <div>${creditorName}</div>
+            ${addressLines({
+              addressType: creditorAddressType,
+              street: creditorStreet, 
+              streetNumber: creditorStreetNumber,
+              postOfficeBox: creditorPostOfficeBox,
+              postalCode: creditorPostalCode,
+              locality: creditorLocality
+            })}
           </div>
 
           ${showReference && reference && html`
             <div class="font-bold text-8 leading-11">${lang.referenceHeading}</div>
             <div class="text-10 leading-11 mb-line-11">
               <div>${reference}</div>
-            </div>     
+            </div>
           `}
 
           ${showAdditionalInfo && additionalInfo && html`
@@ -220,11 +271,17 @@ const AQRBill = {
           <div class="font-bold text-8 leading-11">
             ${showBlanks ? lang.debtorFieldHeading : lang.debtorHeading}
           </div>
-          ${showBlanks ? blankFieldSVG(65, 25, { marginTop: '1.1pt' }) : html`
+          ${showBlanks ? blankField(65, 25, { marginTop: '1.1pt' }) : html`
             <div class="text-10 leading-11">
-              <div>${debtorFullName}</div>
-              ${!reduceContent && html`<div>${debtorStreetPlot}</div>`}
-              <div>${debtorPostcodeLocality}</div>
+              <div>${debtorName}</div>
+              ${addressLines({
+                addressType: debtorAddressType,
+                street: debtorStreet, 
+                streetNumber: debtorStreetNumber,
+                postOfficeBox: debtorPostOfficeBox,
+                postalCode: debtorPostalCode,
+                locality: debtorLocality
+              })}
             </div>
           `}
         </div>

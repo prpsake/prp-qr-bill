@@ -29,6 +29,7 @@ let header: header = {
 }
 
 
+
 // CdtrInf
 
 type creditorInfo = {iban: string}
@@ -40,15 +41,14 @@ type creditorInfo = {iban: string}
 type addressType = [#S | #K]
 
 
-
 type address = {
   addressType: addressType,
   name: string,
   streetOrAddressLine1: string,
-  plotOrAddressLine2: string,
-  postcode: string,
+  streetNumberOrAddressLine2: string,
+  postalCode: string,
   locality: string,
-  countrycode: string,
+  countryCode: string,
 }
 
 
@@ -59,10 +59,10 @@ type ultimateCreditorAddress = {
   addressType: string,
   name: string,
   streetOrAddressLine1: string,
-  plotOrAddressLine2: string,
-  postcode: string,
+  streetNumberOrAddressLine2: string,
+  postalCode: string,
   locality: string,
-  countrycode: string,
+  countryCode: string,
 }
 
 
@@ -70,10 +70,10 @@ let ultimateCreditorEmpty: ultimateCreditorAddress = {
   addressType: "",
   name: "",
   streetOrAddressLine1: "",
-  plotOrAddressLine2: "",
-  postcode: "",
+  streetNumberOrAddressLine2: "",
+  postalCode: "",
   locality: "",
-  countrycode: "",
+  countryCode: "",
 }
 
 
@@ -215,7 +215,7 @@ let validate: qrCodeData => array<string> =
       validString(
         ~subject="creditorInfo.iban",
         ~matchFn= x => removeWhitespace(x) -> match_(%re("/^(CH|LI)[0-9]{19}$/")), 
-        ~message="must start with countrycode CH or LI followed by 19 digits (ex. CH1234567890123456789)",
+        ~message="must start with countryCode CH or LI followed by 19 digits (ex. CH1234567890123456789)",
         ~displayValue="",
         d.creditorInfo.iban
       ),
@@ -228,7 +228,7 @@ let validate: qrCodeData => array<string> =
       ),
       validString(
         ~subject="creditor.name",
-        ~matchFn= x => trim(x) -> match_(%re("/^[\s\S]{1,70}$/")), 
+        ~matchFn= x => trim(x) -> match_(%re("/^[\s\S]{1,70}$/")),
         ~message="must not be empty and at most 70 characters long",
         ~displayValue="",
         d.creditor.name
@@ -239,7 +239,14 @@ let validate: qrCodeData => array<string> =
         ~message="must be at most 70 characters long",
         ~displayValue="",
         d.creditor.streetOrAddressLine1
-      )
+      ),
+      // validString(
+      //   ~subject="creditor.streetNumberOrAddressLine2",
+      //   ~matchFn= x => trim(x) -> match_(%re("/^[\s\S]{0,70}$/")), 
+      //   ~message="must be at most 70 characters long",
+      //   ~displayValue="",
+      //   d.creditor.streetNumberOrAddressLine2
+      // )
     ]
   }
 
@@ -260,18 +267,18 @@ let toString: qrCodeData => string =
     , (d.creditor.addressType :> string)
     , d.creditor.name
     , d.creditor.streetOrAddressLine1
-    , d.creditor.plotOrAddressLine2
-    , d.creditor.postcode
+    , d.creditor.streetNumberOrAddressLine2
+    , d.creditor.postalCode
     , d.creditor.locality
-    , d.creditor.countrycode
+    , d.creditor.countryCode
 
     , (d.ultimateCreditor.addressType :> string)
     , d.ultimateCreditor.name
     , d.ultimateCreditor.streetOrAddressLine1
-    , d.ultimateCreditor.plotOrAddressLine2
-    , d.ultimateCreditor.postcode
+    , d.ultimateCreditor.streetNumberOrAddressLine2
+    , d.ultimateCreditor.postalCode
     , d.ultimateCreditor.locality
-    , d.ultimateCreditor.countrycode
+    , d.ultimateCreditor.countryCode
 
     , Js.Float.toString((d.money.amount :> float))
     , (d.money.currency :> string)
@@ -279,10 +286,10 @@ let toString: qrCodeData => string =
     , (d.ultimateDebtor.addressType :> string)
     , d.ultimateDebtor.name
     , d.ultimateDebtor.streetOrAddressLine1
-    , d.ultimateDebtor.plotOrAddressLine2
-    , d.ultimateDebtor.postcode
+    , d.ultimateDebtor.streetNumberOrAddressLine2
+    , d.ultimateDebtor.postalCode
     , d.ultimateDebtor.locality
-    , d.ultimateDebtor.countrycode
+    , d.ultimateDebtor.countryCode
 
     , (d.referenceInfo.referenceType :> string)
     , d.referenceInfo.referenceCode
