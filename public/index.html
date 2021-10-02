@@ -44,7 +44,7 @@
     document
     .getElementById('qr-bill')
     .data = JSON.stringify({
-      lang: "fr",
+      lang: "de",
       currency: "CHF",
       amount: "143250",
       iban: "CH1234567890123456789",
@@ -64,7 +64,10 @@
         locality: "2222 Zweierstadt",
         countryCode: "CH"
       },
-      additionalInfo: "Rechnung #02021"
+      additionalInfo: {
+        message: "Rechnung #02021",
+        code: ""
+      }
     })
   </script>
 </body>

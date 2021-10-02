@@ -5,31 +5,30 @@ import { property } from 'hybrids'
 // Detector/Validator
 
 const isEmpty =
+  x => 
+  (typeof x !== 'number' && typeof x !== 'string') || x === ''
+
+
+const someEmpty =
   xs =>
   !Array.isArray(xs) ||
   xs.length === 0 ||
-  xs.some(
-    x => 
-    (typeof x !== 'number' && typeof x !== 'string') || x === ''
-  )
-
+  xs.some(isEmpty)
 
 
 const detectAddressType = 
   address =>
-  isEmpty([address.streetNumber, address.postalCode]) ? "K" : "S"
+  someEmpty([address.streetNumber, address.postalCode]) ? "K" : "S"
 
 
 
 // Helpers
 
-const parseData =
+const jsonParse =
   x => {
     if (x === undefined) return {}
     try {
-      const data = JSON.parse(x)
-      
-      return data
+      return JSON.parse(x)
     } catch (e) {
       console.log(e)
       return {}
@@ -43,9 +42,11 @@ const parseData =
 const setPropsFromData =
   () =>
   ({
-    ...property(parseData),
+    ...property(jsonParse),
     connect: (host, key) => {
       const data = host[key]
+      // optionally validate
+      // ...
 
       host.lang = data.lang
 
@@ -72,7 +73,8 @@ const setPropsFromData =
       host.debtorLocality = data.debtor.locality
       host.debtorCountryCode = data.debtor.countryCode
 
-      host.additionalInfo = data.additionalInfo
+      host.additionalInfoMessage = data.additionalInfo.message
+      host.additionalInfoCode = data.additionalInfo.code
     }
   })
 

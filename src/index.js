@@ -99,7 +99,8 @@ const AQRBill = {
   debtorLocality: '',
   debtorCountryCode: '',
 
-  additionalInfo: '', // string (NB: Notification / Bill information)
+  additionalInfoMessage: '', // Notification (unstructred)
+  additionalInfoCode: '', // Bill Information (structured)
 
   showReference: setBoolFromVersions(['1a', '1b', '2a', '2b']),
   showAdditionalInfo: setBoolFromVersions(['1a', '1b', '2a', '2b']),
@@ -133,7 +134,8 @@ const AQRBill = {
     debtorLocality,
     //debtorCountryCode,
 
-    additionalInfo,
+    additionalInfoMessage,
+    additionalInfoCode,
 
     showReference,
     showAdditionalInfo,
@@ -142,14 +144,106 @@ const AQRBill = {
     reduceContent
 
   }) => html`
-    ${console.log("updated")}
-    <div class="flex flex-col w-62 p-5">
 
-      <div class="h-7 font-bold text-11 leading-none">${lang.receiptTitle}</div>
+  <div class="flex flex-col w-62 p-5">
 
-      <div class="h-56">
-        <div class="font-bold text-6 leading-9">${lang.creditorHeading}</div>
+    <div class="h-7 font-bold text-11 leading-none">${lang.receiptTitle}</div>
+
+    <div class="h-56">
+      <div class="font-bold text-6 leading-9">${lang.creditorHeading}</div>
+      <div class="text-8 leading-9 mb-line-9">
+        <div>${iban}</div>
+        <div>${creditorName}</div>
+        ${addressLines({
+          addressType: creditorAddressType,
+          street: creditorStreet, 
+          streetNumber: creditorStreetNumber,
+          postOfficeBox: creditorPostOfficeBox,
+          postalCode: creditorPostalCode,
+          locality: creditorLocality,
+          reduceContent
+        })}
+      </div>
+
+      ${showReference && reference && html`
+        <div class="font-bold text-6 leading-9">${lang.referenceHeading}</div>
         <div class="text-8 leading-9 mb-line-9">
+          <div>${reference}</div>
+        </div>
+      `}
+
+      <div class="font-bold text-6 leading-9">
+        ${showBlanks ? lang.debtorFieldHeading : lang.debtorHeading}
+      </div>
+      ${showBlanks ? blankField(52, 20, { marginTop: '.8pt' }) : html`
+        <div class="text-8 leading-9">
+          <div>${debtorName}</div>
+          ${addressLines({
+            addressType: debtorAddressType,
+            street: debtorStreet, 
+            streetNumber: debtorStreetNumber,
+            postOfficeBox: debtorPostOfficeBox,
+            postalCode: debtorPostalCode,
+            locality: debtorLocality,
+            reduceContent
+          })}
+        </div>
+      `}
+    </div>
+
+    <div class="h-14 flex">
+      <div class="flex-shrink w-22">
+        <div class="font-bold text-6 leading-9">${lang.currencyHeading}</div>
+        <div class="text-8 leading-9">${currency}</div>
+      </div>
+
+      <div class=${{ 'flex-grow': true, flex: showBlanks }}>
+        <div class="font-bold text-6 leading-9">${lang.amountHeading}</div>
+        ${showBlanks ? blankField(30, 10, { marginTop: '2pt', marginLeft: '4pt' }) : html`
+          <div class="text-8 leading-9">${amount}</div>
+        `}
+      </div>
+    </div>
+
+    <div class="h-18 font-bold text-6 text-right">${lang.acceptancePointHeading}</div>
+  </div>
+
+  <div class="flex flex-col w-148 p-5">
+    <div class="h-85 flex">
+      <div class="w-51">
+        <div class="h-7 font-bold text-11 leading-none">${lang.paymentPartTitle}</div>
+
+        <div class="h-56 py-5 pr-5"></div>
+
+        ${showBlanks ? html`
+          <div class="h-22">
+            <div class="flex font-bold text-8 leading-11">
+              <div class="mr-line-7">${lang.currencyHeading}</div>
+              <div>${lang.amountHeading}</div>
+            </div>
+            <div class="flex">
+              <div class="text-10 leading-11 mr-line-9">${currency}</div>
+              ${blankField(40, 15, { marginTop: '1.6pt' })}
+            </div>
+          </div>
+        ` : html`
+          <div class="h-22 flex">
+            <div class="flex-shrink w-22">
+              <div class="font-bold text-8 leading-11">${lang.currencyHeading}</div>
+              <div class="text-10 leading-11">${currency}</div>
+            </div>
+
+            <div class="flex-grow">
+              <div class="font-bold text-8 leading-11">${lang.amountHeading}</div>
+              <div class="text-10 leading-11">${amount}</div>
+            </div>
+          </div>
+        `}
+      </div>
+
+      <div class="w-87">
+        <div class="font-bold text-8 leading-11">${lang.creditorHeading}</div>
+        <div class="text-10 leading-11 mb-line-11">
           <div>${iban}</div>
           <div>${creditorName}</div>
           ${addressLines({
@@ -158,23 +252,30 @@ const AQRBill = {
             streetNumber: creditorStreetNumber,
             postOfficeBox: creditorPostOfficeBox,
             postalCode: creditorPostalCode,
-            locality: creditorLocality,
-            reduceContent
+            locality: creditorLocality
           })}
         </div>
 
         ${showReference && reference && html`
-          <div class="font-bold text-6 leading-9">${lang.referenceHeading}</div>
-          <div class="text-8 leading-9 mb-line-9">
+          <div class="font-bold text-8 leading-11">${lang.referenceHeading}</div>
+          <div class="text-10 leading-11 mb-line-11">
             <div>${reference}</div>
           </div>
         `}
 
-        <div class="font-bold text-6 leading-9">
+        ${showAdditionalInfo && html`
+          <div class="font-bold text-8 leading-11">${lang.additionalInfoHeading}</div>
+          <div class="text-10 leading-11 mb-line-11">
+            ${additionalInfoMessage && html`<div>${additionalInfoMessage}</div>`}
+            ${additionalInfoCode && html`<div>${additionalInfoCode}</div>`}
+          </div>     
+        `}
+
+        <div class="font-bold text-8 leading-11">
           ${showBlanks ? lang.debtorFieldHeading : lang.debtorHeading}
         </div>
-        ${showBlanks ? blankField(52, 20, { marginTop: '.8pt' }) : html`
-          <div class="text-8 leading-9">
+        ${showBlanks ? blankField(65, 25, { marginTop: '1.1pt' }) : html`
+          <div class="text-10 leading-11">
             <div>${debtorName}</div>
             ${addressLines({
               addressType: debtorAddressType,
@@ -182,113 +283,15 @@ const AQRBill = {
               streetNumber: debtorStreetNumber,
               postOfficeBox: debtorPostOfficeBox,
               postalCode: debtorPostalCode,
-              locality: debtorLocality,
-              reduceContent
+              locality: debtorLocality
             })}
           </div>
         `}
       </div>
 
-      <div class="h-14 flex">
-        <div class="flex-shrink w-22">
-          <div class="font-bold text-6 leading-9">${lang.currencyHeading}</div>
-          <div class="text-8 leading-9">${currency}</div>
-        </div>
-
-        <div class=${{ 'flex-grow': true, flex: showBlanks }}>
-          <div class="font-bold text-6 leading-9">${lang.amountHeading}</div>
-          ${showBlanks ? blankField(30, 10, { marginTop: '2pt', marginLeft: '4pt' }) : html`
-            <div class="text-8 leading-9">${amount}</div>
-          `}
-        </div>
-      </div>
-
-      <div class="h-18 font-bold text-6 text-right">${lang.acceptancePointHeading}</div>
     </div>
-
-    <div class="flex flex-col w-148 p-5">
-      <div class="h-85 flex">
-        <div class="w-51">
-          <div class="h-7 font-bold text-11 leading-none">${lang.paymentPartTitle}</div>
-
-          <div class="h-56 py-5 pr-5"></div>
-
-          ${showBlanks ? html`
-            <div class="h-22">
-              <div class="flex font-bold text-8 leading-11">
-                <div class="mr-line-7">${lang.currencyHeading}</div>
-                <div>${lang.amountHeading}</div>
-              </div>
-              <div class="flex">
-                <div class="text-10 leading-11 mr-line-9">${currency}</div>
-               ${blankField(40, 15, { marginTop: '1.6pt' })}
-              </div>
-            </div>
-          ` : html`
-            <div class="h-22 flex">
-              <div class="flex-shrink w-22">
-                <div class="font-bold text-8 leading-11">${lang.currencyHeading}</div>
-                <div class="text-10 leading-11">${currency}</div>
-              </div>
-
-              <div class="flex-grow">
-                <div class="font-bold text-8 leading-11">${lang.amountHeading}</div>
-                <div class="text-10 leading-11">${amount}</div>
-              </div>
-            </div>
-          `}
-        </div>
-
-        <div class="w-87">
-          <div class="font-bold text-8 leading-11">${lang.creditorHeading}</div>
-          <div class="text-10 leading-11 mb-line-11">
-            <div>${iban}</div>
-            <div>${creditorName}</div>
-            ${addressLines({
-              addressType: creditorAddressType,
-              street: creditorStreet, 
-              streetNumber: creditorStreetNumber,
-              postOfficeBox: creditorPostOfficeBox,
-              postalCode: creditorPostalCode,
-              locality: creditorLocality
-            })}
-          </div>
-
-          ${showReference && reference && html`
-            <div class="font-bold text-8 leading-11">${lang.referenceHeading}</div>
-            <div class="text-10 leading-11 mb-line-11">
-              <div>${reference}</div>
-            </div>
-          `}
-
-          ${showAdditionalInfo && additionalInfo && html`
-            <div class="font-bold text-8 leading-11">${lang.additionalInfoHeading}</div>
-            <div class="text-10 leading-11 mb-line-11">
-              <div>${additionalInfo}</div>
-            </div>     
-          `}
-
-          <div class="font-bold text-8 leading-11">
-            ${showBlanks ? lang.debtorFieldHeading : lang.debtorHeading}
-          </div>
-          ${showBlanks ? blankField(65, 25, { marginTop: '1.1pt' }) : html`
-            <div class="text-10 leading-11">
-              <div>${debtorName}</div>
-              ${addressLines({
-                addressType: debtorAddressType,
-                street: debtorStreet, 
-                streetNumber: debtorStreetNumber,
-                postOfficeBox: debtorPostOfficeBox,
-                postalCode: debtorPostalCode,
-                locality: debtorLocality
-              })}
-            </div>
-          `}
-        </div>
-
-      </div>
-      <div class="h-10"></div>
-    </div>
+    <div class="h-10"></div>
+  </div>
 
   `.style(styles)
 }
