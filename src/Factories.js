@@ -1,4 +1,5 @@
 import { property } from 'hybrids'
+import { parseJson } from './Helpers.bs.js'
 
 
 
@@ -9,11 +10,13 @@ const isEmpty =
   (typeof x !== 'number' && typeof x !== 'string') || x === ''
 
 
+
 const someEmpty =
   xs =>
   !Array.isArray(xs) ||
   xs.length === 0 ||
   xs.some(isEmpty)
+
 
 
 const detectAddressType = 
@@ -22,29 +25,15 @@ const detectAddressType =
 
 
 
-// Helpers
-
-const jsonParse =
-  x => {
-    if (x === undefined) return {}
-    try {
-      return JSON.parse(x)
-    } catch (e) {
-      console.log(e)
-      return {}
-    }
-  }
-
-
-
 // Factories
 
 const setPropsFromData =
   () =>
   ({
-    ...property(jsonParse),
+    ...property(parseJson),
     connect: (host, key) => {
       const data = host[key]
+      console.log(data)
       // optionally validate
       // ...
 

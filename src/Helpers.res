@@ -1,31 +1,3 @@
-// type data = {
-//   lang: "de",
-//   currency: "CHF",
-//   amount: "143250",
-//   iban: "CH1234567890123456789",
-//   reference: "RF18539007547034",
-//   creditor: {
-//     name: "Kat Kitty",
-//     street: "Einerstrasse",
-//     streetNumber: "1E",
-//     postOfficeBox: "Postfach 8888",
-//     postalCode: "1111",
-//     locality: "Einerstadt",
-//     countryCode: "CH"
-//   },
-//   debtor: {
-//     name: "Dog Dodgy",
-//     street: "Zweierstrasse 2",
-//     locality: "2222 Zweierstadt",
-//     countryCode: "CH"
-//   },
-//   additionalInfo: {
-//     message: "Rechnung #02021",
-//     code: ""
-//   }
-// }
-
-
 let defaultAddressData = {
   open Js.Json
   Js.Dict.fromArray([
@@ -40,6 +12,7 @@ let defaultAddressData = {
 }
 
 
+
 let defaultAdditionalInfoData = {
   open Js.Json
   Js.Dict.fromArray([
@@ -47,6 +20,7 @@ let defaultAdditionalInfoData = {
     ("code", string(""))
   ])
 }
+
 
 
 let defaultData = {
@@ -65,7 +39,7 @@ let defaultData = {
 
 
 
-let valueFromKey: Js.Dict.t<'a> => Js.Dict.t<'a> => string => Js.Json.t =
+let getJsonString: Js.Dict.t<'a> => Js.Dict.t<'a> => string => Js.Json.t =
   defaultData =>
   data =>
   key =>
@@ -95,34 +69,75 @@ let valueFromKey: Js.Dict.t<'a> => Js.Dict.t<'a> => string => Js.Json.t =
   }
 
 
+
 let parseJson =
-  s => {
+  str => {
     let json = 
-      try Js.Json.parseExn(s)
+      try Js.Json.parseExn(str)
       catch {
       | _ => Js.Json.object_(defaultData)
       }
     switch Js.Json.classify(json) {
     | Js.Json.JSONObject(data) =>
-      let valueFromRootKey = valueFromKey(defaultData, data)
-      let valueFromAddressKey = valueFromKey(defaultAddressData)
+      let getJsonString_ = getJsonString(defaultData, data)
+      let getAddressJsonString_ = getJsonString(defaultAddressData)
+      let getAdditionalInfoJsonString_ = getJsonString(defaultAdditionalInfoData)
       Js.Dict.fromArray([
-        ("lang",      valueFromRootKey("lang")),
-        ("currency",  valueFromRootKey("currency")),
-        ("amount",    valueFromRootKey("amount")),
-        ("iban",      valueFromRootKey("iban")),
-        ("reference", valueFromRootKey("reference")),
+        ("lang",      getJsonString_("lang")),
+        ("currency",  getJsonString_("currency")),
+        ("amount",    getJsonString_("amount")),
+        ("iban",      getJsonString_("iban")),
+        ("reference", getJsonString_("reference")),
         ("creditor",
           switch Js.Dict.get(data, "creditor") {
           | Some(json) =>
             switch Js.Json.classify(json) {
             | Js.Json.JSONObject(addressData) =>
               Js.Json.object_(Js.Dict.fromArray([
-                ("name", valueFromAddressKey(addressData, "name"))
+                ("name", getAddressJsonString_(addressData, "name")),
+                ("street", getAddressJsonString_(addressData, "street")),
+                ("streetNumber", getAddressJsonString_(addressData, "streetNumber")),
+                ("postOfficeBox", getAddressJsonString_(addressData, "postOfficeBox")),
+                ("postalCode", getAddressJsonString_(addressData, "postalCode")),
+                ("locality", getAddressJsonString_(addressData, "locality")),
+                ("countryCode", getAddressJsonString_(addressData, "countryCode"))
               ]))
             | _ => Js.Json.object_(defaultAddressData)
             }
           | None => Js.Json.object_(defaultAddressData)
+          }
+        ),
+        ("debtor",
+          switch Js.Dict.get(data, "debtor") {
+          | Some(json) =>
+            switch Js.Json.classify(json) {
+            | Js.Json.JSONObject(addressData) =>
+              Js.Json.object_(Js.Dict.fromArray([
+                ("name", getAddressJsonString_(addressData, "name")),
+                ("street", getAddressJsonString_(addressData, "street")),
+                ("streetNumber", getAddressJsonString_(addressData, "streetNumber")),
+                ("postOfficeBox", getAddressJsonString_(addressData, "postOfficeBox")),
+                ("postalCode", getAddressJsonString_(addressData, "postalCode")),
+                ("locality", getAddressJsonString_(addressData, "locality")),
+                ("countryCode", getAddressJsonString_(addressData, "countryCode"))
+              ]))
+            | _ => Js.Json.object_(defaultAddressData)
+            }
+          | None => Js.Json.object_(defaultAddressData)
+          }
+        ),
+        ("additionalInfo",
+          switch Js.Dict.get(data, "additionalInfo") {
+          | Some(json) =>
+            switch Js.Json.classify(json) {
+            | Js.Json.JSONObject(additionalInfoData) =>
+              Js.Json.object_(Js.Dict.fromArray([
+                ("message", getAdditionalInfoJsonString_(additionalInfoData, "message")),
+                ("code", getAdditionalInfoJsonString_(additionalInfoData, "code"))
+              ]))
+            | _ => Js.Json.object_(defaultAdditionalInfoData)
+            }
+          | None => Js.Json.object_(defaultAdditionalInfoData)
           }
         )
       ])
