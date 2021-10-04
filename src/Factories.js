@@ -1,5 +1,5 @@
 import { property } from 'hybrids'
-import { parseJson } from './Helpers.bs.js'
+import { parseJson } from './Parser.bs.js'
 
 
 
