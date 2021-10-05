@@ -26,7 +26,7 @@
 import { define, html, property } from 'hybrids'
 import { setPropsFromData, setBoolFromVersions } from './Factories.js'
 import { translate } from './Translations.bs.js'
-import { blockStr4, referenceBlockStr, moneyFromScaledIntStr2 } from './Helpers.bs.js'
+import { Formatter } from './Formatter.bs.js'
 import styles from './index.a.css'
 
 
@@ -77,9 +77,9 @@ const AQRBill = {
   lang: property(translate), // en | de | fr | it, defaults en
 
   currency: '', // CHF | EUR
-  amount: property(moneyFromScaledIntStr2), // integer string
-  iban: property(blockStr4), // QRIBAN | IBAN
-  reference: property(referenceBlockStr), // QRR | SCOR | None, None omits
+  amount: property(Formatter.moneyFromScaledIntStr2), // integer string
+  iban: property(Formatter.blockStr4), // QRIBAN | IBAN
+  reference: property(Formatter.referenceBlockStr), // QRR | SCOR | None, None omits
 
   creditorAddressType: '',
   creditorName: '',

@@ -1,5 +1,5 @@
 import { property } from 'hybrids'
-import { parseJson } from './Parser.bs.js'
+import { Parser } from './Parser.bs.js'
 
 
 
@@ -30,7 +30,7 @@ const detectAddressType =
 const setPropsFromData =
   () =>
   ({
-    ...property(parseJson),
+    ...property(Parser.parseJson),
     connect: (host, key) => {
       const data = host[key]
       console.log(data)
