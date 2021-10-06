@@ -68,6 +68,7 @@ module Parser: Parser = {
     | Some(x) =>
       switch Js.Json.classify(x) {
       | Js.Json.JSONString(x) => (k, Js.Json.string(x))
+      | Js.Json.JSONNumber(x) => (k, Js.Json.string(Belt.Float.toString(x)))
       | _ => (k, v)
       }
     | None => (k, v)
@@ -97,15 +98,9 @@ module Parser: Parser = {
 
 
   let parseJson: string => Js.Dict.t<Js.Json.t> =
-    str => {
-      let json = 
-        try Js.Json.parseExn(str)
-        catch {
-        | _ => 
-          defaultEntries
-          -> Js.Dict.fromArray
-          -> Js.Json.object_
-        }
+    str =>
+    try {
+      let json = Js.Json.parseExn(str)
       switch Js.Json.classify(json) {
       | Js.Json.JSONObject(data) =>
         Js.Array2.map(defaultRootEntries, entryFromData(data))
@@ -114,8 +109,9 @@ module Parser: Parser = {
         -> Js.Array2.concat(entriesFromNestedData(data, defaultAdditionalInfoEntries, "additionalInfo"))
       | _ => defaultEntries //failwith("Expected an object")
       }
-      -> Js.Dict.fromArray
+    } catch {
+    | _ => defaultEntries
     }
+    -> Js.Dict.fromArray
 
 }
-
