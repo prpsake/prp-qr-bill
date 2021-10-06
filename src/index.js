@@ -74,6 +74,8 @@ const AQRBill = {
   amount: property(Formatter.moneyFromScaledIntStr2), // integer string
   iban: property(Formatter.blockStr4), // QRIBAN | IBAN
   reference: property(Formatter.referenceBlockStr), // QRR | SCOR | None, None omits
+  message: '', // Notification (unstructred)
+  messageCode: '', // Bill Information (structured)
 
   creditorName: '',
   creditorStreet: '',
@@ -91,9 +93,6 @@ const AQRBill = {
   debtorLocality: '',
   debtorCountryCode: '',
 
-  additionalInfoMessage: '', // Notification (unstructred)
-  additionalInfoCode: '', // Bill Information (structured)
-
   showReference: setBoolFromVersions(['1a', '1b', '2a', '2b']),
   showAdditionalInfo: setBoolFromVersions(['1a', '1b', '2a', '2b']),
   showBlanks: setBoolFromVersions(['3b']),
@@ -107,6 +106,8 @@ const AQRBill = {
     amount,
     iban,
     reference,
+    message,
+    messageCode,
 
     creditorName,
     creditorStreet,
@@ -123,9 +124,6 @@ const AQRBill = {
     debtorPostalCode,
     debtorLocality,
     //debtorCountryCode,
-
-    additionalInfoMessage,
-    additionalInfoCode,
 
     showReference,
     showAdditionalInfo,
@@ -239,8 +237,8 @@ const AQRBill = {
         ${showAdditionalInfo && html`
           <div class="font-bold text-8 leading-11">${lang.additionalInfoHeading}</div>
           <div class="text-10 leading-11 mb-line-11">
-            ${additionalInfoMessage && html`<div>${additionalInfoMessage}</div>`}
-            ${additionalInfoCode && html`<div>${additionalInfoCode}</div>`}
+            ${message && html`<div>${message}</div>`}
+            ${messageCode && html`<div>${messageCode}</div>`}
           </div>     
         `}
 

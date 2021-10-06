@@ -1,6 +1,7 @@
 module type Parser = {
-
-  let parseJson: string => Js.Dict.t<Js.Json.t>
+  
+  type entry
+  let parseJson: string => array<entry>
 
 }
 
@@ -18,7 +19,9 @@ module Parser: Parser = {
       ("currency", string("")),
       ("amount", string("")),
       ("iban", string("")),
-      ("reference", string(""))
+      ("reference", string("")),
+      ("message", string("")),
+      ("messageCode", string(""))
     ]
   }
 
@@ -39,23 +42,12 @@ module Parser: Parser = {
 
 
 
-  let defaultAdditionalInfoEntries: array<entry> = {
-    open Js.Json
-    [
-      ("message", string("")),
-      ("code", string(""))
-    ]
-  }
-
-
-
   let defaultEntries: array<entry> = {
     open Js.Json
     defaultRootEntries
     ->Js.Array2.concat([
       ("creditor", object_(Js.Dict.fromArray(defaultAddressEntries))),
-      ("debtor", object_(Js.Dict.fromArray(defaultAddressEntries))),
-      ("additionalInfo", object_(Js.Dict.fromArray(defaultAdditionalInfoEntries)))
+      ("debtor", object_(Js.Dict.fromArray(defaultAddressEntries)))
     ])
   }
 
@@ -107,7 +99,7 @@ module Parser: Parser = {
 
 
 
-  let parseJson: string => Js.Dict.t<Js.Json.t> =
+  let parseJson: string => array<entry> =
     str =>
     try {
       let json = Js.Json.parseExn(str)
@@ -117,12 +109,11 @@ module Parser: Parser = {
         ->Js.Array2.map(entryFromData(data))
         ->Js.Array2.concat(entriesFromNestedData(data, defaultAddressEntries, "creditor"))
         ->Js.Array2.concat(entriesFromNestedData(data, defaultAddressEntries, "debtor"))
-        ->Js.Array2.concat(entriesFromNestedData(data, defaultAdditionalInfoEntries, "additionalInfo"))
       | _ => defaultEntries //failwith("Expected an object")
       }
     } catch {
     | _ => defaultEntries
     }
-    ->Js.Dict.fromArray
+    //->Js.Dict.fromArray
 
 } 
