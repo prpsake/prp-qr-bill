@@ -155,8 +155,8 @@ module Formatter: Formatter = {
   let reverseStr: string => string =
     x =>
     Js.String2.split(x, "")
-    ->Js.Array2.reverseInPlace
-    ->Js.Array2.joinWith("")
+    -> Js.Array2.reverseInPlace
+    -> Js.Array2.joinWith("")
 
 
 
@@ -235,10 +235,10 @@ module Formatter: Formatter = {
     | JSString(x) =>
       let xTrim = Js.String2.trim(x)
       xTrim
-      ->Js.String2.slice(~from=0, ~to_=-n)
-      ->reverseStr
-      ->blockStr3
-      ->reverseStr
+      -> Js.String2.slice(~from=0, ~to_=-n)
+      -> reverseStr
+      -> blockStr3
+      -> reverseStr
       ++ "." 
       ++ Js.String2.sliceToEnd(xTrim, ~from=-n)
     | _ => ""

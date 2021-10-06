@@ -75,10 +75,10 @@ module Parser: Parser = {
 
 
 
-  let entriesFromNestedData: string => array<entry> => Js.Dict.t<Js.Json.t> => array<entry> =
-    key =>
-    defaultNestedEntries =>
+  let entriesFromNestedData: Js.Dict.t<Js.Json.t> => array<entry> => string => array<entry> =
     data =>
+    defaultNestedEntries =>
+    key =>
     [(
       key,
       switch Js.Dict.get(data, key) {
@@ -108,11 +108,10 @@ module Parser: Parser = {
         }
       switch Js.Json.classify(json) {
       | Js.Json.JSONObject(data) =>
-        defaultRootEntries
-        -> Js.Array2.map(entryFromData(data))
-        -> Js.Array2.concat(entriesFromNestedData("creditor", defaultAddressEntries, data))
-        -> Js.Array2.concat(entriesFromNestedData("debtor", defaultAddressEntries, data))
-        -> Js.Array2.concat(entriesFromNestedData("additionalInfo", defaultAdditionalInfoEntries, data))
+        Js.Array2.map(defaultRootEntries, entryFromData(data))
+        -> Js.Array2.concat(entriesFromNestedData(data, defaultAddressEntries, "creditor"))
+        -> Js.Array2.concat(entriesFromNestedData(data, defaultAddressEntries, "debtor"))
+        -> Js.Array2.concat(entriesFromNestedData(data, defaultAdditionalInfoEntries, "additionalInfo"))
       | _ => defaultEntries //failwith("Expected an object")
       }
       -> Js.Dict.fromArray
