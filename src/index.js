@@ -57,15 +57,9 @@ const blankField =
 
 
 
-const addressLines =
-  props =>
-  props.addressType === 'K' ? html`
-    ${!props.reduceContent && html`<div>${props.street}</div>`}
-    <div>${props.locality}</div>
-  ` : html`
-    ${!props.reduceContent && html`<div>${props.street} ${props.streetNumber}</div>`}
-    <div>${props.postalCode} ${props.locality}</div>
-  `
+const join =
+  (...xs) =>
+  xs.join(' ').trim()
 
 
 
@@ -81,7 +75,6 @@ const AQRBill = {
   iban: property(Formatter.blockStr4), // QRIBAN | IBAN
   reference: property(Formatter.referenceBlockStr), // QRR | SCOR | None, None omits
 
-  creditorAddressType: '',
   creditorName: '',
   creditorStreet: '',
   creditorStreetNumber: '',
@@ -90,7 +83,6 @@ const AQRBill = {
   creditorLocality: '',
   creditorCountryCode: '',
 
-  debtorAddressType: '',
   debtorName: '',
   debtorStreet: '',
   debtorStreetNumber: '',
@@ -116,7 +108,6 @@ const AQRBill = {
     iban,
     reference,
 
-    creditorAddressType,
     creditorName,
     creditorStreet,
     creditorStreetNumber,
@@ -125,7 +116,6 @@ const AQRBill = {
     creditorLocality,
     //creditorCountryCode,
 
-    debtorAddressType,
     debtorName,
     debtorStreet,
     debtorStreetNumber,
@@ -154,15 +144,9 @@ const AQRBill = {
       <div class="text-8 leading-9 mb-line-9">
         <div>${iban}</div>
         <div>${creditorName}</div>
-        ${addressLines({
-          addressType: creditorAddressType,
-          street: creditorStreet, 
-          streetNumber: creditorStreetNumber,
-          postOfficeBox: creditorPostOfficeBox,
-          postalCode: creditorPostalCode,
-          locality: creditorLocality,
-          reduceContent
-        })}
+        ${!reduceContent && creditorStreet && html`<div>${join(creditorStreet, creditorStreetNumber)}</div>`}
+        ${creditorPostOfficeBox && html`<div>${creditorPostOfficeBox}</div>`}
+        <div>${join(creditorPostalCode, creditorLocality)}</div>
       </div>
 
       ${showReference && reference && html`
@@ -178,15 +162,9 @@ const AQRBill = {
       ${showBlanks ? blankField(52, 20, { marginTop: '.8pt' }) : html`
         <div class="text-8 leading-9">
           <div>${debtorName}</div>
-          ${addressLines({
-            addressType: debtorAddressType,
-            street: debtorStreet, 
-            streetNumber: debtorStreetNumber,
-            postOfficeBox: debtorPostOfficeBox,
-            postalCode: debtorPostalCode,
-            locality: debtorLocality,
-            reduceContent
-          })}
+          ${!reduceContent && debtorStreet && html`<div>${join(debtorStreet, debtorStreetNumber)}</div>`}
+          ${debtorPostOfficeBox && html`<div>${debtorPostOfficeBox}</div>`}
+          <div>${join(debtorPostalCode, debtorLocality)}</div>
         </div>
       `}
     </div>
@@ -246,14 +224,9 @@ const AQRBill = {
         <div class="text-10 leading-11 mb-line-11">
           <div>${iban}</div>
           <div>${creditorName}</div>
-          ${addressLines({
-            addressType: creditorAddressType,
-            street: creditorStreet, 
-            streetNumber: creditorStreetNumber,
-            postOfficeBox: creditorPostOfficeBox,
-            postalCode: creditorPostalCode,
-            locality: creditorLocality
-          })}
+          ${creditorStreet && html`<div>${join(creditorStreet, creditorStreetNumber)}</div>`}
+          ${creditorPostOfficeBox && html`<div>${creditorPostOfficeBox}</div>`}
+          <div>${join(creditorPostalCode, creditorLocality)}</div>
         </div>
 
         ${showReference && reference && html`
@@ -277,14 +250,9 @@ const AQRBill = {
         ${showBlanks ? blankField(65, 25, { marginTop: '1.1pt' }) : html`
           <div class="text-10 leading-11">
             <div>${debtorName}</div>
-            ${addressLines({
-              addressType: debtorAddressType,
-              street: debtorStreet, 
-              streetNumber: debtorStreetNumber,
-              postOfficeBox: debtorPostOfficeBox,
-              postalCode: debtorPostalCode,
-              locality: debtorLocality
-            })}
+            ${debtorStreet && html`<div>${join(debtorStreet, debtorStreetNumber)}</div>`}
+            ${debtorPostOfficeBox && html`<div>${debtorPostOfficeBox}</div>`}
+            <div>${join(debtorPostalCode, debtorLocality)}</div>
           </div>
         `}
       </div>

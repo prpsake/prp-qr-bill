@@ -12,139 +12,6 @@ module type Formatter = {
 
 module Formatter: Formatter = {
 
-  // Header
-
-  type qrType = [#SPC]
-  type version = [#"0200"]
-  type encoding = [#1]
-
-
-  type header = {
-    qrType: qrType, // QRType
-    version: version, // Version
-    encoding: encoding, // Coding
-  }
-
-
-  let header: header = {
-    qrType: #SPC,
-    version: #"0200",
-    encoding: #1,
-  }
-
-
-
-  // CdtrInf
-
-  type creditorInfo = {iban: string}
-
-
-
-  // Cdtr(, UltmtDbtr)
-
-  type addressType = [#S | #K]
-
-
-  type address = {
-    addressType: addressType,
-    name: string,
-    streetOrAddressLine1: string,
-    streetNumberOrAddressLine2: string,
-    postalCode: string,
-    locality: string,
-    countryCode: string,
-  }
-
-
-
-  // UltmtCdtr (use type address when used in future)
-
-  type ultimateCreditorAddress = {
-    addressType: string,
-    name: string,
-    streetOrAddressLine1: string,
-    streetNumberOrAddressLine2: string,
-    postalCode: string,
-    locality: string,
-    countryCode: string,
-  }
-
-
-  let ultimateCreditorEmpty: ultimateCreditorAddress = {
-    addressType: "",
-    name: "",
-    streetOrAddressLine1: "",
-    streetNumberOrAddressLine2: "",
-    postalCode: "",
-    locality: "",
-    countryCode: "",
-  }
-
-
-
-  // CcyAmt
-
-  type currency = [#CHF | #EUR]
-
-
-  type money = {
-    amount: float,
-    currency: currency,
-  }
-
-
-
-  // RmtInf
-
-  type referenceType = [#QRR | #SCOR | #NON]
-
-
-  type reference = {
-    referenceType: referenceType,
-    referenceCode: string,
-  }
-
-
-
-  // AddInf
-
-  type trailer = [#EPD]
-
-
-  type additionalInfo = {
-    unstructured: string,
-    trailer: trailer,
-    structured: string,
-  }
-
-
-
-  // AltPmtInf
-
-  type alternativeInfo = {
-    paramLine1: string,
-    paramLine2: string,
-  }
-
-
-
-  // QR Code Data Rec
-
-  type qrCodeData = {
-    header: header,
-    creditorInfo: creditorInfo,
-    creditor: address,
-    ultimateCreditor: address,
-    money: money,
-    ultimateDebtor: ultimateCreditorAddress,
-    referenceInfo: reference,
-    additionalInfo: additionalInfo,
-    alternativeInfo: alternativeInfo,
-  }
-
-  
-
-
   /** 
 
   `reverseStr(x)` 
@@ -155,8 +22,8 @@ module Formatter: Formatter = {
   let reverseStr: string => string =
     x =>
     Js.String2.split(x, "")
-    -> Js.Array2.reverseInPlace
-    -> Js.Array2.joinWith("")
+    ->Js.Array2.reverseInPlace
+    ->Js.Array2.joinWith("")
 
 
 
@@ -168,8 +35,8 @@ module Formatter: Formatter = {
   character-blocks of length `n` seperated by spaces.
 
   Examples: 
-  - n = 3, x = "123456789" -> "123 456 789"
-  - n = 4, x = "abcdefgh" -> "abcd efgh"
+  - n = 3, x = "123456789" ->"123 456 789"
+  - n = 4, x = "abcdefgh" ->"abcd efgh"
 
   */
   let blockStr: int => string => string =
@@ -178,7 +45,7 @@ module Formatter: Formatter = {
     switch Js.Types.classify(x) {
     | JSString(x) => 
       let x_ = Js.String2.replaceByRe(x, %re("/\s/g"), "")
-      let pat = Js.Re.fromStringWithFlags("\\S{"++ Belt.Int.toString(n) ++"}", ~flags="g")
+      let pat = Js.Re.fromStringWithFlags("\\S{"++Belt.Int.toString(n)++"}", ~flags="g")
       Js.String2.replaceByRe(x_, pat, "$& ")
     | _ => ""
     }
@@ -200,8 +67,8 @@ module Formatter: Formatter = {
   in the QR-Reference format.
 
   Examples:
-  - x = "RF18539007547034" -> "RF18 5390 0754 7034"
-  - x = "213455654786322980076652786" -> "21 34556 54786 32298 00766 52786"
+  - x = "RF18539007547034" ->"RF18 5390 0754 7034"
+  - x = "213455654786322980076652786" ->"21 34556 54786 32298 00766 52786"
 
   */
   let referenceBlockStr: string => string =
@@ -235,10 +102,10 @@ module Formatter: Formatter = {
     | JSString(x) =>
       let xTrim = Js.String2.trim(x)
       xTrim
-      -> Js.String2.slice(~from=0, ~to_=-n)
-      -> reverseStr
-      -> blockStr3
-      -> reverseStr
+      ->Js.String2.slice(~from=0, ~to_=-n)
+      ->reverseStr
+      ->blockStr3
+      ->reverseStr
       ++ "." 
       ++ Js.String2.sliceToEnd(xTrim, ~from=-n)
     | _ => ""
@@ -247,20 +114,5 @@ module Formatter: Formatter = {
 
 
   let moneyFromScaledIntStr2 = moneyFromScaledIntStr(2)
-
-
-
-
-  // let suffixEntryKeys: string => array<entry> => array<entry> =
-  //   str =>
-  //   xs =>
-  //   Js.Array2.map(xs, ((k, v)) => {
-  //     (
-  //       k
-  //       ++ Js.String2.substring(str, ~from=0, ~to_=1) -> Js.String2.toUpperCase
-  //       ++ Js.String2.sliceToEnd(str, ~from=1),
-  //       v
-  //     )
-  //   })
 
 }

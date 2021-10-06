@@ -52,12 +52,25 @@ module Parser: Parser = {
   let defaultEntries: array<entry> = {
     open Js.Json
     defaultRootEntries
-    -> Js.Array2.concat([
+    ->Js.Array2.concat([
       ("creditor", object_(Js.Dict.fromArray(defaultAddressEntries))),
       ("debtor", object_(Js.Dict.fromArray(defaultAddressEntries))),
       ("additionalInfo", object_(Js.Dict.fromArray(defaultAdditionalInfoEntries)))
     ])
   }
+
+
+
+  let suffixEntryKeys: array<entry> => string => array<entry> =
+    entries =>
+    key =>
+    Js.Array2.map(entries, ((k, v)) => {
+      ( key
+        ++Js.String2.substring(k, ~from=0, ~to_=1) ->Js.String2.toUpperCase
+        ++Js.String2.sliceToEnd(k, ~from=1),
+        v
+      )
+    })
 
 
 
@@ -80,20 +93,17 @@ module Parser: Parser = {
     data =>
     defaultNestedEntries =>
     key =>
-    [(
-      key,
-      switch Js.Dict.get(data, key) {
-      | Some(x) =>
-        switch Js.Json.classify(x) {
-        | Js.Json.JSONObject(nestedData) =>
-          Js.Array2.map(defaultNestedEntries, entryFromData(nestedData))
-        | _ => defaultNestedEntries
-        }
-      | None => defaultNestedEntries
+    switch Js.Dict.get(data, key) {
+    | Some(x) =>
+      switch Js.Json.classify(x) {
+      | Js.Json.JSONObject(nestedData) =>
+        defaultNestedEntries
+        ->Js.Array2.map(entryFromData(nestedData))
+      | _ => defaultNestedEntries
       }
-      -> Js.Dict.fromArray
-      -> Js.Json.object_
-    )]
+    | None => defaultNestedEntries
+    }
+    ->suffixEntryKeys(key)
 
 
 
@@ -103,15 +113,16 @@ module Parser: Parser = {
       let json = Js.Json.parseExn(str)
       switch Js.Json.classify(json) {
       | Js.Json.JSONObject(data) =>
-        Js.Array2.map(defaultRootEntries, entryFromData(data))
-        -> Js.Array2.concat(entriesFromNestedData(data, defaultAddressEntries, "creditor"))
-        -> Js.Array2.concat(entriesFromNestedData(data, defaultAddressEntries, "debtor"))
-        -> Js.Array2.concat(entriesFromNestedData(data, defaultAdditionalInfoEntries, "additionalInfo"))
+        defaultRootEntries
+        ->Js.Array2.map(entryFromData(data))
+        ->Js.Array2.concat(entriesFromNestedData(data, defaultAddressEntries, "creditor"))
+        ->Js.Array2.concat(entriesFromNestedData(data, defaultAddressEntries, "debtor"))
+        ->Js.Array2.concat(entriesFromNestedData(data, defaultAdditionalInfoEntries, "additionalInfo"))
       | _ => defaultEntries //failwith("Expected an object")
       }
     } catch {
     | _ => defaultEntries
     }
-    -> Js.Dict.fromArray
+    ->Js.Dict.fromArray
 
-}
+} 
