@@ -26,7 +26,7 @@
 import { define, html, property } from 'hybrids'
 import { setPropsFromData, setBoolFromVersions } from './Factories.js'
 import { translate } from './Translations.bs.js'
-import { Formatter } from './Formatter.bs.js'
+import * as Formatter from './Formatter.bs.js'
 import styles from './index.a.css'
 
 
@@ -68,15 +68,17 @@ const AQRBill = {
   data: setPropsFromData(),
 
   version: '',
-  lang: property(translate), // en | de | fr | it, defaults en
+  lang: property(translate),
 
-  currency: '', // CHF | EUR
-  amount: property(Formatter.moneyFromScaledIntStr2), // integer string
-  iban: property(Formatter.blockStr4), // QRIBAN | IBAN
-  reference: property(Formatter.referenceBlockStr), // QRR | SCOR | None, None omits
+  currency: '',
+  amount: property(Formatter.moneyFromScaledIntStr2),
+  iban: property(Formatter.blockStr4),
+  referenceType: '',
+  reference: property(Formatter.referenceBlockStr),
   message: '', // Notification (unstructred)
   messageCode: '', // Bill Information (structured)
 
+  creditorAddressType: '',
   creditorName: '',
   creditorStreet: '',
   creditorStreetNumber: '',
@@ -85,6 +87,7 @@ const AQRBill = {
   creditorLocality: '',
   creditorCountryCode: '',
 
+  debtorAddressType: '',
   debtorName: '',
   debtorStreet: '',
   debtorStreetNumber: '',

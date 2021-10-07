@@ -7,218 +7,197 @@ https://regex101.com/
 */
 
 
+// Header
 
-module type Validator = {
+type qrType = [#SPC]
+type version = [#"0200"]
+type encoding = [#1]
 
-  type entry
-  let validate: array<entry> => array<entry>
-  
+
+type header = {
+  qrType: qrType, // QRType
+  version: version, // Version
+  encoding: encoding, // Coding
+}
+
+
+let header: header = {
+  qrType: #SPC,
+  version: #"0200",
+  encoding: #1,
 }
 
 
 
-module Validator: Validator = {
+// CdtrInf
 
-
-  // Header
-
-  type qrType = [#SPC]
-  type version = [#"0200"]
-  type encoding = [#1]
-
-
-  type header = {
-    qrType: qrType, // QRType
-    version: version, // Version
-    encoding: encoding, // Coding
-  }
-
-
-  let header: header = {
-    qrType: #SPC,
-    version: #"0200",
-    encoding: #1,
-  }
+type creditorInfo = {iban: string}
 
 
 
-  // CdtrInf
+// Cdtr(, UltmtDbtr)
 
-  type creditorInfo = {iban: string}
-
-
-
-  // Cdtr(, UltmtDbtr)
-
-  type addressType = [#S | #K]
+type addressType = [#S | #K]
 
 
-  type address = {
-    addressType: addressType,
-    name: string,
-    streetOrAddressLine1: string,
-    streetNumberOrAddressLine2: string,
-    postalCode: string,
-    locality: string,
-    countryCode: string,
-  }
+type address = {
+  addressType: addressType,
+  name: string,
+  streetOrAddressLine1: string,
+  streetNumberOrAddressLine2: string,
+  postalCode: string,
+  locality: string,
+  countryCode: string,
+}
 
 
 
-  // UltmtCdtr (use type address when used in future)
+// UltmtCdtr (use type address when used in future)
 
-  type ultimateCreditorAddress = {
-    addressType: string,
-    name: string,
-    streetOrAddressLine1: string,
-    streetNumberOrAddressLine2: string,
-    postalCode: string,
-    locality: string,
-    countryCode: string,
-  }
-
-
-  let ultimateCreditorEmpty: ultimateCreditorAddress = {
-    addressType: "",
-    name: "",
-    streetOrAddressLine1: "",
-    streetNumberOrAddressLine2: "",
-    postalCode: "",
-    locality: "",
-    countryCode: "",
-  }
+type ultimateCreditorAddress = {
+  addressType: string,
+  name: string,
+  streetOrAddressLine1: string,
+  streetNumberOrAddressLine2: string,
+  postalCode: string,
+  locality: string,
+  countryCode: string,
+}
 
 
-
-  // CcyAmt
-
-  type currency = [#CHF | #EUR]
-
-
-  type money = {
-    amount: float,
-    currency: currency,
-  }
+let ultimateCreditorEmpty: ultimateCreditorAddress = {
+  addressType: "",
+  name: "",
+  streetOrAddressLine1: "",
+  streetNumberOrAddressLine2: "",
+  postalCode: "",
+  locality: "",
+  countryCode: "",
+}
 
 
 
-  // RmtInf
+// CcyAmt
 
-  type referenceType = [#QRR | #SCOR | #NON]
-
-
-  type reference = {
-    referenceType: referenceType,
-    referenceCode: string,
-  }
+type currency = [#CHF | #EUR]
 
 
-
-  // AddInf
-
-  type trailer = [#EPD]
-
-
-  type additionalInfo = {
-    unstructured: string,
-    trailer: trailer,
-    structured: string,
-  }
+type money = {
+  amount: float,
+  currency: currency,
+}
 
 
 
-  // AltPmtInf
+// RmtInf
 
-  type alternativeInfo = {
-    paramLine1: string,
-    paramLine2: string,
-  }
+type referenceType = [#QRR | #SCOR | #NON]
 
 
+type reference = {
+  referenceType: referenceType,
+  referenceCode: string,
+}
 
-  // QR Code Data Rec
 
-  type qrCodeData = {
-    header: header,
-    creditorInfo: creditorInfo,
-    creditor: address,
-    ultimateCreditor: address,
-    money: money,
-    ultimateDebtor: ultimateCreditorAddress,
-    referenceInfo: reference,
-    additionalInfo: additionalInfo,
-    alternativeInfo: alternativeInfo,
+
+// AddInf
+
+type trailer = [#EPD]
+
+
+type additionalInfo = {
+  unstructured: string,
+  trailer: trailer,
+  structured: string,
+}
+
+
+
+// AltPmtInf
+
+type alternativeInfo = {
+  paramLine1: string,
+  paramLine2: string,
+}
+
+
+
+// QR Code Data Rec
+
+type qrCodeData = {
+  header: header,
+  creditorInfo: creditorInfo,
+  creditor: address,
+  ultimateCreditor: address,
+  money: money,
+  ultimateDebtor: ultimateCreditorAddress,
+  referenceInfo: reference,
+  additionalInfo: additionalInfo,
+  alternativeInfo: alternativeInfo,
+}
+
+
+
+type entry = (string, Js.Json.t)
+
+
+
+type validationError<'a> =
+  {
+    key: string,
+    message: string,
+    value: 'a,
+    displayValue: string
   }
 
 
 
-  type entry = (string, Js.Json.t)
+type validationResult<'a> = 
+  | Ok(string)
+  | Error(validationError<'a>)
 
 
 
-  type validationError<'a> =
-    {
-      key: string,
-      message: string,
-      value: 'a,
-      displayValue: string
-    }
+let entryFromValidationResult: validationResult<'a> => string => entry =
+  x =>
+  key =>
+  switch x {
+  | Ok(x) => (key, Js.Json.string(x))
+  | Error(err) => (key, Js.Json.string(err.displayValue))
+  }
 
 
 
-  type validationResult<'a> = 
-    | Ok(string)
-    | Error(validationError<'a>)
-
-
-
-  let entryFromValidationResult: validationResult<'a> => string => entry =
-    x =>
-    key =>
-    switch x {
-    | Ok(x) => (key, Js.Json.string(x))
-    | Error(err) => (key, Js.Json.string(err.displayValue))
-    }
-
-
-
-  let validString:
-    (
-      option<Js.Json.t>,
-      ~key: string,
-      ~matchFn: (string => option<array<string>>),
-      ~message: string,
-      ~displayValue: string,
-    ) => entry =
-    (
-      x: option<Js.Json.t>,
-      ~key: string,
-      ~matchFn: (string => option<array<string>>),
-      ~message: string,
-      ~displayValue: string,
-    ) =>
-    switch x {
-    | Some(x) => 
-      switch Js.Json.classify(x) {
-      | Js.Json.JSONString(x) => 
-        switch matchFn(x) {
-        | Some(match) => Ok(match[0])
-        | None => Error({
-            key,
-            message,
-            value: x,
-            displayValue
-          })
-        }
-      | _ => 
-        Error({
+let validateEntry:
+  (
+    Js.Dict.t<Js.Json.t>,
+    string,
+    ~matchFn: (string => option<array<string>>),
+    ~message: string,
+    ~displayValue: string,
+  ) => entry =
+  (
+    data: Js.Dict.t<Js.Json.t>,
+    key: string,
+    ~matchFn: (string => option<array<string>>),
+    ~message: string,
+    ~displayValue: string,
+  ) =>
+  switch Js.Dict.get(data, key) {
+  | Some(x) => 
+    switch Js.Json.classify(x) {
+    | Js.Json.JSONString(x) => 
+      switch matchFn(x) {
+      | Some(match) => Ok(match[0])
+      | None => Error({
           key,
-          message: "is not a string",
-          value: "",
-          displayValue: ""
+          message,
+          value: x,
+          displayValue
         })
       }
-    | None =>
+    | _ => 
       Error({
         key,
         message: "is not a string",
@@ -226,60 +205,90 @@ module Validator: Validator = {
         displayValue: ""
       })
     }
-    ->entryFromValidationResult(key)
+  | None =>
+    Error({
+      key,
+      message: "is not a string",
+      value: "",
+      displayValue: ""
+    })
+  }
+  ->entryFromValidationResult(key)
 
 
 
-  let removeWhitespace: string => string =
-    Js.String.replaceByRe(%re("/\s/g"), "")
-
-
-
-  let validate: array<entry> => array<entry> =
-    entries => {
-      let data = Js.Dict.fromArray(entries)
-      [
-        // (header.qrType :> string),
-        // (header.version :> string),
-        // Js.Int.toString((header.encoding :> int)),
-        Js.Dict.get(data, "iban")
-        ->validString(
-          ~key="iban",
-          ~matchFn= x => removeWhitespace(x) -> Js.String2.match_(%re("/^(CH|LI)[0-9]{19}$/")), 
-          ~message="must start with countryCode CH or LI followed by 19 digits (ex. CH1234567890123456789)",
-          ~displayValue=""
-        ),
-        // Js.Dict.get(data, "creditorName")
-        // validString(
-        //   ~key="creditor.addressType",
-        //   ~matchFn= x => removeWhitespace(x) -> match_(%re("/^(K|S){1}$/")), 
-        //   ~message="must be either K or S",
-        //   ~displayValue="",
-        //   (d.creditor.addressType :> string)
-        // ),
-        Js.Dict.get(data, "creditorName")
-        ->validString(
-          ~key="creditorName",
-          ~matchFn= x => Js.String2.trim(x) -> Js.String2.match_(%re("/^[\s\S]{1,70}$/")),
-          ~message="must not be empty and at most 70 characters long",
-          ~displayValue=""
-        ),
-        // Js.Dict.get(data, "creditorStreet")
-        // validString(
-        //   ~key="creditor.streetOrAddressLine1",
-        //   ~matchFn= x => trim(x) -> match_(%re("/^[\s\S]{0,70}$/")), 
-        //   ~message="must be at most 70 characters long",
-        //   ~displayValue="",
-        //   d.creditor.streetOrAddressLine1
-        // ),
-        // validString(
-        //   ~key="creditor.streetNumberOrAddressLine2",
-        //   ~matchFn= x => trim(x) -> match_(%re("/^[\s\S]{0,70}$/")), 
-        //   ~message="must be at most 70 characters long",
-        //   ~displayValue="",
-        //   d.creditor.streetNumberOrAddressLine2
-        // )
-      ]
-    }
-
-}
+let validateEntries: array<entry> => array<entry> =
+  entries => {
+    let data = Js.Dict.fromArray(entries)
+    [
+      // (header.qrType :> string),
+      // (header.version :> string),
+      // Js.Int.toString((header.encoding :> int)),
+      data->validateEntry(
+        "lang",
+        ~matchFn= 
+          x => Js.String2.trim(x) ->Js.String2.match_(%re("/^(en|de|fr|it)$/")), 
+        ~message="must be either en, de, fr, or it",
+        ~displayValue=""
+      ),
+      data->validateEntry(
+        "currency",
+        ~matchFn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^(CHF|EUR)$/")), 
+        ~message="must be either CHF or EUR",
+        ~displayValue=""
+      ),
+      data->validateEntry(
+        "amount",
+        ~matchFn= 
+          x => 
+          Formatter.removeWhitespace(x)
+          ->Js.Float.fromString
+          ->Js.Float.toFixedWithPrecision(~digits=2)
+          ->Js.String2.match_(%re("/^([1-9]{1}[0-9]{0,8}\.[0-9]{2}|0\.[0-9]{1}[1-9]{1})$/")), 
+        ~message="must be a number ranging from 0.01 to 999999999.99",
+        ~displayValue=""
+      ),
+      data->validateEntry(
+        "iban",
+        ~matchFn= x => Formatter.removeWhitespace(x) ->Js.String2.match_(%re("/^(CH|LI)[0-9]{19}$/")), 
+        ~message="must start with countryCode CH or LI followed by 19 digits (ex. CH1234567890123456789)",
+        ~displayValue=""
+      ),
+      data->validateEntry(
+        "creditorAddressType",
+        ~matchFn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^(K|S){1}$/")), 
+        ~message="must be either K or S",
+        ~displayValue="",
+      ),
+      data->validateEntry(
+        "creditorName",
+        ~matchFn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{1,70}$/")),
+        ~message="must not be empty and at most 70 characters long",
+        ~displayValue=""
+      ),
+      data->validateEntry(
+        "creditorStreet",
+        ~matchFn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
+        ~message="must be at most 70 characters long",
+        ~displayValue=""
+      ),
+      data->validateEntry(
+        "creditorStreetNumber",
+        ~matchFn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
+        ~message="must be at most 16 characters long",
+        ~displayValue=""
+      ),
+      data->validateEntry(
+        "creditorPostalCode",
+        ~matchFn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
+        ~message="must be at most 16 characters long",
+        ~displayValue=""
+      ),
+      data->validateEntry(
+        "creditorLocality",
+        ~matchFn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{0,35}$/")),
+        ~message="must be at most 35 characters long",
+        ~displayValue=""
+      )
+    ]
+  }
