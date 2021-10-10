@@ -88,25 +88,6 @@ let entriesFromNestedData: Js.Dict.t<Js.Json.t> => array<entry> => string => arr
 
 
 
-let addressTypeEntryFromEntries: array<entry> => array<entry> =
-  entries =>
-  Js.Array2.filter(
-    entries, 
-    ((k, _)) => k == "streeNumber" || k == "postalCode"
-  )
-  ->Js.Array2.some(
-      ((_, v)) =>
-      switch Js.Json.classify(v) {
-      | Js.Json.JSONString(v) => v != ""
-      | _ => false
-      } 
-    )
-  ->isStructured => (isStructured ? "S" : "K")
-  ->value => [("addressType", Js.Json.string(value))]
-  ->Js.Array2.concat(entries)
-
-
-
 let referenceTypeEntryFromEntries: array<entry> => array<entry> =
   entries =>
   Js.Dict.fromArray(entries)
@@ -129,9 +110,7 @@ let referenceTypeEntryFromEntries: array<entry> => array<entry> =
         ->value =>
           value == "3" ? "QRR"
           : 
-          existsReferenceEntry ? 
-          "SCOR" :
-          "NON"
+          (existsReferenceEntry ? "SCOR" : "NON")
       | _ => "NON"
       }
     | None => "NON"
@@ -141,12 +120,22 @@ let referenceTypeEntryFromEntries: array<entry> => array<entry> =
 
 
 
-let addressEntriesFromData: Js.Dict.t<Js.Json.t> => string => array<entry> =
-  data =>
-  key =>
-  entriesFromNestedData(data, defaultAddressEntries, key)
-  ->addressTypeEntryFromEntries
-  ->prefixEntryKeysWith(key)
+let addressTypeEntryFromEntries: array<entry> => array<entry> =
+  entries =>
+  Js.Array2.filter(
+    entries, 
+    ((k, _)) => k == "streeNumber" || k == "postalCode"
+  )
+  ->Js.Array2.some(
+      ((_, v)) =>
+      switch Js.Json.classify(v) {
+      | Js.Json.JSONString(v) => v != ""
+      | _ => false
+      } 
+    )
+  ->isStructured => (isStructured ? "S" : "K")
+  ->value => [("addressType", Js.Json.string(value))]
+  ->Js.Array2.concat(entries)
 
 
 
@@ -155,6 +144,15 @@ let rootEntriesFromData: Js.Dict.t<Js.Json.t> => array<entry> =
   defaultRootEntries
   ->Js.Array2.map(entryFromData(data))
   ->referenceTypeEntryFromEntries
+
+
+
+let addressEntriesFromData: Js.Dict.t<Js.Json.t> => string => array<entry> =
+  data =>
+  key =>
+  entriesFromNestedData(data, defaultAddressEntries, key)
+  ->addressTypeEntryFromEntries
+  ->prefixEntryKeysWith(key)
 
 
 
