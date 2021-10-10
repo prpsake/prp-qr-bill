@@ -68,7 +68,7 @@ let validateEntry:
   switch Js.Dict.get(data, key) {
   | Some(x) => 
     switch Js.Json.classify(x) {
-    | Js.Json.JSONString(x) => 
+    | JSONString(x) => 
       switch fn(x) {
       | Some(xs) => Ok(xs[0])
       | None =>
@@ -115,6 +115,7 @@ let validateIban: validationResult<'a> => validationResult<'a> =
     }
   | Error(err) => Error(err)
   }
+
 
 
 

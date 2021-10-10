@@ -62,8 +62,8 @@ let entryFromData: Js.Dict.t<Js.Json.t> => entry => entry =
   switch Js.Dict.get(data, k) {
   | Some(x) =>
     switch Js.Json.classify(x) {
-    | Js.Json.JSONString(x) => (k, Js.Json.string(x))
-    | Js.Json.JSONNumber(x) => (k, Js.Json.string(Belt.Float.toString(x)))
+    | JSONString(x) => (k, Js.Json.string(x))
+    | JSONNumber(x) => (k, Js.Json.string(Belt.Float.toString(x)))
     | _ => (k, v)
     }
   | None => (k, v)
@@ -78,7 +78,7 @@ let entriesFromNestedData: Js.Dict.t<Js.Json.t> => array<entry> => string => arr
   switch Js.Dict.get(data, key) {
   | Some(x) =>
     switch Js.Json.classify(x) {
-    | Js.Json.JSONObject(nestedData) =>
+    | JSONObject(nestedData) =>
       defaultNestedEntries
       ->Js.Array2.map(entryFromData(nestedData))
     | _ => defaultNestedEntries
@@ -95,7 +95,7 @@ let referenceTypeEntryFromEntries: array<entry> => array<entry> =
     switch Js.Dict.get(data, "reference") {
     | Some(x) =>
       switch Js.Json.classify(x) {
-      | Js.Json.JSONString(x) => x != ""
+      | JSONString(x) => x != ""
       | _ => false
       }
     | None => false
@@ -104,7 +104,7 @@ let referenceTypeEntryFromEntries: array<entry> => array<entry> =
     switch Js.Dict.get(data, "iban") {
     | Some(x) =>
       switch Js.Json.classify(x) {
-      | Js.Json.JSONString(x) =>
+      | JSONString(x) =>
         Formatter.removeWhitespace(x)
         ->Js.String2.substring(~from=4, ~to_=5)
         ->value =>
@@ -129,7 +129,7 @@ let addressTypeEntryFromEntries: array<entry> => array<entry> =
   ->Js.Array2.some(
       ((_, v)) =>
       switch Js.Json.classify(v) {
-      | Js.Json.JSONString(v) => v != ""
+      | JSONString(v) => v != ""
       | _ => false
       } 
     )
@@ -161,7 +161,7 @@ let parseJson: string => array<entry> =
   try {
     let json = Js.Json.parseExn(str)
     switch Js.Json.classify(json) {
-    | Js.Json.JSONObject(data) =>
+    | JSONObject(data) =>
       rootEntriesFromData(data)
       ->Js.Array2.concat(addressEntriesFromData(data, "creditor"))
       ->Js.Array2.concat(addressEntriesFromData(data, "debtor") )

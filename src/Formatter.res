@@ -3,10 +3,15 @@
 `removeWhitespace(x)` 
 
 Takes string `x` and returns a string from `x` without whitespace.
+Returns an emtpy string if `x` is not a string.
 
 */
 let removeWhitespace: string => string =
-  Js.String.replaceByRe(%re("/\s/g"), "")
+  x =>
+  switch Js.Types.classify(x) {
+  | JSString(x) => Js.String2.replaceByRe(x, %re("/\s/g"), "")
+  | _ => ""
+  }
 
 
 
