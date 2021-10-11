@@ -89,7 +89,7 @@ let validateIban: validationResult<'a> => validationResult<'a> =
   | Ok(str) => {
     let codeA = Js.String2.charCodeAt(`A`, 0)
     let codeZ = Js.String2.charCodeAt(`Z`, 0)
-    Js.String2.toUpperCase(str)
+    str
     ->x => (
         Js.String2.sliceToEnd(x, ~from=4) 
         ++Js.String2.substring(x, ~from=0, ~to_=4)
@@ -137,7 +137,7 @@ let validateEntries: array<entry> => array<entry> =
       ->validateEntry(
           "lang",
           ~fn= 
-            x => Js.String2.trim(x) ->Js.String2.match_(%re("/^(en|de|fr|it)$/")), 
+            x => Formatter.removeWhitespace(x) ->Js.String2.match_(%re("/^(en|de|fr|it)$/")), 
           ~msg="must be either en, de, fr, or it",
           ~display=""
         )
@@ -146,7 +146,7 @@ let validateEntries: array<entry> => array<entry> =
       data
       ->validateEntry(
           "currency",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^(CHF|EUR)$/")), 
+          ~fn= x => Formatter.removeWhitespace(x) ->Js.String2.match_(%re("/^(CHF|EUR)$/")), 
           ~msg="must be either CHF or EUR",
           ~display=""
         )

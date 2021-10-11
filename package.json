@@ -34,6 +34,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "snowpack dev",
+    "build": "snowpack build",
     "re:start": "rescript build -w",
     "re:build": "rescript"
   }

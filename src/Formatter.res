@@ -35,11 +35,13 @@ let reverseStr: string => string =
 `blockStr(n, x)`
 
 Takes integer `n`, string `x` and returns a string from `x` grouped in 
-character-blocks of length `n` seperated by spaces.
+character-blocks of maximal length `n` seperated by spaces.
+Returns an emtpy string if `x` is not a string.
 
 Examples: 
 - n = 3, x = "123456789" ->"123 456 789"
-- n = 4, x = "abcdefgh" ->"abcd efgh"
+- n = 4, x = "abcdefghi" ->"abcd efgh i"
+- n = 5, x = "xxxx" ->"xxxx"
 
 */
 let blockStr: int => string => string =
@@ -47,9 +49,10 @@ let blockStr: int => string => string =
   x =>
   switch Js.Types.classify(x) {
   | JSString(x) => 
-    let x_ = Js.String2.replaceByRe(x, %re("/\s/g"), "")
     let pat = Js.Re.fromStringWithFlags("\\S{"++Belt.Int.toString(n)++"}", ~flags="g")
-    Js.String2.replaceByRe(x_, pat, "$& ")
+    removeWhitespace(x)
+    ->Js.String2.replaceByRe(pat, "$& ")
+    ->Js.String2.trim
   | _ => ""
   }
 
@@ -68,6 +71,7 @@ referenceBlockStr(x)
 Takes string `x`, if `x` starts with "RF", returns a string from `x` in 
 the Creditor Reference format (CROOKS 11649), else returns a string from `x` 
 in the QR-Reference format.
+Returns an emtpy string if `x` is not a string.
 
 Examples:
 - x = "RF18539007547034" ->"RF18 5390 0754 7034"
@@ -95,7 +99,8 @@ let referenceBlockStr: string => string =
 
 moneyFromScaledIntStr(n, x)
 
-Takes integer `n`, string `x` and returns a string from `x`
+Takes integer `n`, string `x` and returns a string from `x`... TODO
+Returns an emtpy string if `x` is not a string.
 
 */
 let moneyFromScaledIntStr: int => string => string =
