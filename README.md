@@ -1,2 +1,4 @@
 # prp-qr-bill
-SVG QR-Bill using hybrids.js
+HTML QR-Bill using hybrids.js
+
+The repo is still a wip (= do not use it)
