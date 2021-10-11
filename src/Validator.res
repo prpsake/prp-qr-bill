@@ -27,7 +27,14 @@ type validationResult<'a> =
 
 
 
-let mod97FromIban: string => int =
+/**
+
+`mod97FromSring(str)`
+
+Gratefully taken from https://github.com/arhs/iban.js/blob/master/iban.js#L71
+
+*/
+let mod97FromSring: string => int =
   str => {
     let remainder = ref(str)
     let block = ref("")
@@ -46,6 +53,64 @@ let mod97FromIban: string => int =
     | Some(x) => mod(x, 97)
     | None => -1
     }
+  }
+
+
+
+/**
+
+`mod10FromIntegerString(str)`
+
+Gratefully taken from https://www.hosang.ch/modulo10.aspx via
+https://github.com/NicolasZanotti/esr-code-line/blob/master/src/index.ts#L10
+
+checkDigit(code: string): number {
+  const numbers = code.split("");
+  let carry: any = 0;
+
+  for (let i = 0, j = 0; i < numbers.length; i++) {
+    j = parseInt(carry, 10) + parseInt(numbers[i], 10);
+    carry = CHECK_DIGIT_TABLE[j % 10];
+  }
+
+  return (10 - carry) % 10;
+}
+
+function mod10(code: string): string {
+
+  code = code.replace(/ /g, "");
+
+  const table = [0, 9, 4, 6, 8, 2, 7, 1, 3, 5];
+  let carry = 0;
+
+  for(let i = 0; i < code.length; i++){
+    carry = table[(carry + parseInt(code.substr(i, 1), 10)) % 10];
+  }
+
+  return ((10 - carry) % 10).toString();
+
+}
+*/
+let mod10FromIntString: string => string =
+  str => {
+    let table = [0, 9, 4, 6, 8, 2, 7, 1, 3, 5]
+    let carry = ref(0)
+    let ints = 
+      Js.String2.split(str, "")
+      ->Js.Array2.map(
+        x =>
+        switch Belt.Int.fromString(x) {
+        | Some(x) => x
+        | None => -1
+        }
+      )
+
+    for i in 0 to (Js.Array.length(ints) - 1) {
+      let j = mod(carry.contents + Js.Array2.unsafe_get(ints, i), 10)
+      carry := Js.Array2.unsafe_get(table, j)
+    }
+
+    Belt.Int.toString(mod((10 - carry.contents), 10))
   }
 
 
@@ -104,11 +169,11 @@ let validateIban: validationResult<'a> => validationResult<'a> =
           x
       )
     ->Js.Array2.joinWith("")
-    ->mod97FromIban
+    ->mod97FromSring
     ->x =>
       x == 1 ? Ok(str) : Error({
         key: "iban",
-        msg: ["fails the checksum"],
+        msg: ["fails on the checksum: expected 1 but got " ++Belt.Int.toString(x)],
         val: str,
         display: ""
       })
@@ -116,6 +181,52 @@ let validateIban: validationResult<'a> => validationResult<'a> =
   | Error(err) => Error(err)
   }
 
+
+
+let validateReference: validationResult<'a> => entry => validationResult<'a> =
+  result =>
+  ((_, v)) =>
+  switch result {
+  | Ok(str) =>
+    switch Js.Json.classify(v) {
+    | JSONString(v) => v
+    | _ => ""
+    }
+    ->referenceType =>
+      switch referenceType {
+      | "QRR" =>
+        mod10FromIntString(str)
+        ->a => {
+          let b = Js.String2.sliceToEnd(str, ~from=26)
+          a == b ?
+          Ok(str) :
+          Error({
+            key: "reference",
+            msg: ["fails on the check digit: expected" ++b++ ", but got " ++a],
+            val: str,
+            display: ""
+          })
+        }
+      | "SCOR" => Ok(str) //TODO
+      | "NON" =>
+        Js.String.length(str) < 1 ? 
+        Ok("") :
+        Error({
+          key: "reference",
+          msg: ["got removed as the reference type was determined as NON"],
+          val: str,
+          display: ""
+        })
+      | _ =>
+        Error({
+          key: "reference",
+          msg: ["fails before calculating the check digit as no reference type could be determined"],
+          val: str,
+          display: ""
+        })
+      }
+  | Error(err) => Error(err)
+  }
 
 
 
@@ -132,6 +243,37 @@ let entryFromValidationResult: validationResult<'a> => string => entry =
 let validateEntries: array<entry> => array<entry> =
   entries => {
     let data = Js.Dict.fromArray(entries)
+
+    let referenceTypeEntry = 
+      data 
+      ->validateEntry(
+          "referenceType",
+          ~fn= x => Formatter.removeWhitespace(x) ->Js.String2.match_(%re("/^(QRR|SCOR|NON)$/")), 
+          ~msg="must be either QRR, SCOR or NON",
+          ~display=""
+        )
+      ->entryFromValidationResult("referenceType")
+
+    let creditorAddressTypeEntry =
+      data
+      ->validateEntry(
+          "creditorAddressType",
+          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^(K|S){1}$/")), 
+          ~msg="must be either K or S",
+          ~display="",
+        )
+      ->entryFromValidationResult("creditorAddressType")
+
+    let debtorAddressTypeEntry =
+      data
+      ->validateEntry(
+          "debtorAddressType",
+          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^(K|S){1}$/")), 
+          ~msg="must be either K or S",
+          ~display="",
+        )
+      ->entryFromValidationResult("debtorAddressType")
+
     [
       data
       ->validateEntry(
@@ -180,14 +322,7 @@ let validateEntries: array<entry> => array<entry> =
       ->validateIban
       ->entryFromValidationResult("iban"),
 
-      data
-      ->validateEntry(
-          "referenceType",
-          ~fn= x => Formatter.removeWhitespace(x) ->Js.String2.match_(%re("/^(QRR|SCOR|NON)$/")), 
-          ~msg="must be either QRR, SCOR or NON",
-          ~display=""
-        )
-      ->entryFromValidationResult("referenceType"),
+      referenceTypeEntry,
 
       data
       ->validateEntry(
@@ -196,6 +331,7 @@ let validateEntries: array<entry> => array<entry> =
           ~msg="must be at most 27 characters long",
           ~display=""
         )
+      ->validateReference(referenceTypeEntry)
       ->entryFromValidationResult("reference"),
 
       data
@@ -216,14 +352,7 @@ let validateEntries: array<entry> => array<entry> =
         )
       ->entryFromValidationResult("messageCode"),
 
-      data
-      ->validateEntry(
-          "creditorAddressType",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^(K|S){1}$/")), 
-          ~msg="must be either K or S",
-          ~display="",
-        )
-      ->entryFromValidationResult("creditorAddressType"),
+      creditorAddressTypeEntry,
 
       data
       ->validateEntry(
@@ -288,14 +417,7 @@ let validateEntries: array<entry> => array<entry> =
         )
       ->entryFromValidationResult("creditorCountryCode"),
 
-      data
-      ->validateEntry(
-          "debtorAddressType",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^(K|S){1}$/")), 
-          ~msg="must be either K or S",
-          ~display="",
-        )
-      ->entryFromValidationResult("debtorAddressType"),
+      debtorAddressTypeEntry,
 
       data
       ->validateEntry(

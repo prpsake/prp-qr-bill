@@ -88,6 +88,8 @@ let entriesFromNestedData: Js.Dict.t<Js.Json.t> => array<entry> => string => arr
 
 
 
+
+
 let referenceTypeEntryFromEntries: array<entry> => array<entry> =
   entries =>
   Js.Dict.fromArray(entries)
@@ -114,7 +116,7 @@ let referenceTypeEntryFromEntries: array<entry> => array<entry> =
       | _ => "NON"
       }
     | None => "NON"
-  }
+    }
   ->value => [("referenceType", Js.Json.string(value))]
   ->Js.Array2.concat(entries)
 
