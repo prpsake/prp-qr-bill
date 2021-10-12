@@ -138,3 +138,45 @@ type qrCodeData = {
   alternativeInfo: alternativeInfo,
 }
 
+
+
+type entry = (string, string)
+
+
+
+let join: array<string> => string =
+  values =>
+  Js.Array2.joinWith(values, " ")
+  ->Js.String2.trim
+
+
+
+let valueFromEntry: Js.Dict.t<string> => string => string =
+  data =>
+  key =>
+  switch Js.Dict.get(data, key) {
+  | Some(x) => x
+  | None => ""
+  }
+
+
+
+let qrCodeString: array<entry> => string =
+  entries => {
+    let data = Js.Dict.fromArray(entries)
+    [
+      data->valueFromEntry("iban"),
+      data->valueFromEntry("creditorAddresstype"),
+      data->valueFromEntry("creditorName"),
+      join([
+        data->valueFromEntry("creditorStreet"),
+        data->valueFromEntry("creditorStreetNumber")
+      ]),
+      join([
+        data->valueFromEntry("creditorPostalCode"),
+        data->valueFromEntry("creditorLocality")
+      ])
+  
+    ]
+    ->Js.Array2.joinWith("\n")
+  }

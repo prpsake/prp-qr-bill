@@ -6,35 +6,43 @@ https://regex101.com/
 
 */
 
-
-type entry = (string, Js.Json.t)
+type jsonEntry = (string, Js.Json.t)
+type entry = (string, string)
 
 
 
 type validationError<'a> =
   {
     key: string,
-    msg: array<string>,
     val: 'a,
+    msg: array<string>,
     display: string
   }
 
 
 
+type validationSuccess =
+  {
+    key: string,
+    val: string
+  }
+
+
+
 type validationResult<'a> = 
-  | Ok(string)
+  | Ok(validationSuccess)
   | Error(validationError<'a>)
 
 
 
 /**
 
-`mod97FromSring(str)`
+`mod97FromString(str)`
 
 Gratefully taken from https://github.com/arhs/iban.js/blob/master/iban.js#L71
 
 */
-let mod97FromSring: string => int =
+let mod97FromString: string => int =
   str => {
     let remainder = ref(str)
     let block = ref("")
@@ -64,36 +72,9 @@ let mod97FromSring: string => int =
 Gratefully taken from https://www.hosang.ch/modulo10.aspx via
 https://github.com/NicolasZanotti/esr-code-line/blob/master/src/index.ts#L10
 
-checkDigit(code: string): number {
-  const numbers = code.split("");
-  let carry: any = 0;
-
-  for (let i = 0, j = 0; i < numbers.length; i++) {
-    j = parseInt(carry, 10) + parseInt(numbers[i], 10);
-    carry = CHECK_DIGIT_TABLE[j % 10];
-  }
-
-  return (10 - carry) % 10;
-}
-
-function mod10(code: string): string {
-
-  code = code.replace(/ /g, "");
-
-  const table = [0, 9, 4, 6, 8, 2, 7, 1, 3, 5];
-  let carry = 0;
-
-  for(let i = 0; i < code.length; i++){
-    carry = table[(carry + parseInt(code.substr(i, 1), 10)) % 10];
-  }
-
-  return ((10 - carry) % 10).toString();
-
-}
 */
 let mod10FromIntString: string => string =
   str => {
-    let table = [0, 9, 4, 6, 8, 2, 7, 1, 3, 5]
     let carry = ref(0)
     let ints = 
       Js.String2.split(str, "")
@@ -107,10 +88,19 @@ let mod10FromIntString: string => string =
 
     for i in 0 to (Js.Array.length(ints) - 1) {
       let j = mod(carry.contents + Js.Array2.unsafe_get(ints, i), 10)
-      carry := Js.Array2.unsafe_get(table, j)
+      carry := Js.Array2.unsafe_get([0, 9, 4, 6, 8, 2, 7, 1, 3, 5], j)
     }
 
     Belt.Int.toString(mod((10 - carry.contents), 10))
+  }
+
+
+
+let entryFromValidationResult: validationResult<'a> => entry =
+  result =>
+  switch result {
+  | Ok({key, val}) => (key, val)
+  | Error(err) => (err.key, err.display)
   }
 
 
@@ -135,15 +125,15 @@ let validateEntry:
     switch Js.Json.classify(x) {
     | JSONString(x) => 
       switch fn(x) {
-      | Some(xs) => Ok(xs[0])
+      | Some(xs) => Ok({key, val: xs[0]})
       | None =>
         Error({key, msg: [msg], val: x, display })
       }
     | _ => 
-      Error({key, msg: ["is not a string"], val: "", display: "" })
+      Error({key, val: "", msg: ["is not a string"], display: "" })
     }
   | None =>
-    Error({key, msg: ["is not a string"], val: "", display: "" })
+    Error({key, val: "", msg: ["is not a string"], display: "" })
   }
 
 
@@ -151,10 +141,10 @@ let validateEntry:
 let validateIban: validationResult<'a> => validationResult<'a> =
   result =>
   switch result {
-  | Ok(str) => {
+  | Ok({key, val}) => {
     let codeA = Js.String2.charCodeAt(`A`, 0)
     let codeZ = Js.String2.charCodeAt(`Z`, 0)
-    str
+    val
     ->x => (
         Js.String2.sliceToEnd(x, ~from=4) 
         ++Js.String2.substring(x, ~from=0, ~to_=4)
@@ -169,12 +159,12 @@ let validateIban: validationResult<'a> => validationResult<'a> =
           x
       )
     ->Js.Array2.joinWith("")
-    ->mod97FromSring
+    ->mod97FromString
     ->x =>
-      x == 1 ? Ok(str) : Error({
-        key: "iban",
+      x == 1 ? Ok({key, val}) : Error({
+        key,
+        val,
         msg: ["fails on the checksum: expected 1 but got " ++Belt.Int.toString(x)],
-        val: str,
         display: ""
       })
     }
@@ -183,45 +173,46 @@ let validateIban: validationResult<'a> => validationResult<'a> =
 
 
 
-let validateReference: validationResult<'a> => entry => validationResult<'a> =
+let validateFromReferenceType: validationResult<'a> => validationResult<'a> => validationResult<'a> =
   result =>
-  ((_, v)) =>
+  otherResult =>
   switch result {
-  | Ok(str) =>
-    switch Js.Json.classify(v) {
-    | JSONString(v) => v
+  | Ok({key, val}) =>
+    let (_, v) = otherResult->entryFromValidationResult
+    switch Js.Types.classify(v) {
+    | JSString(v) => v
     | _ => ""
     }
     ->referenceType =>
       switch referenceType {
       | "QRR" =>
-        mod10FromIntString(str)
+        mod10FromIntString(val)
         ->a => {
-          let b = Js.String2.sliceToEnd(str, ~from=26)
+          let b = Js.String2.sliceToEnd(val, ~from=26)
           a == b ?
-          Ok(str) :
+          Ok({key, val}) :
           Error({
-            key: "reference",
-            msg: ["fails on the check digit: expected" ++b++ ", but got " ++a],
-            val: str,
+            key,
+            val,
+            msg: ["fails on the check digit: expected" ++b++ " but got " ++a],
             display: ""
           })
         }
-      | "SCOR" => Ok(str) //TODO
+      | "SCOR" => Ok({key, val}) //TODO: validation
       | "NON" =>
-        Js.String.length(str) < 1 ? 
-        Ok("") :
+        val === "" ? 
+        Ok({key, val}) :
         Error({
-          key: "reference",
+          key,
+          val,
           msg: ["got removed as the reference type was determined as NON"],
-          val: str,
           display: ""
         })
       | _ =>
         Error({
-          key: "reference",
+          key,
+          val,
           msg: ["fails before calculating the check digit as no reference type could be determined"],
-          val: str,
           display: ""
         })
       }
@@ -230,83 +221,112 @@ let validateReference: validationResult<'a> => entry => validationResult<'a> =
 
 
 
-let entryFromValidationResult: validationResult<'a> => string => entry =
-  x =>
-  key =>
-  switch x {
-  | Ok(x) => (key, Js.Json.string(x))
-  | Error(err) => (key, Js.Json.string(err.display))
+let validateFromAddressType: validationResult<'a> => (~coerceValS: string=?, ~coerceValK: string=?) => validationResult<'a> => validationResult<'a> =
+  result =>
+  (~coerceValS=?, ~coerceValK=?) =>
+  otherResult =>
+  switch result {
+  | Ok({key, val}) =>
+    let (_, v) = otherResult->entryFromValidationResult
+    switch Js.Types.classify(v) {
+    | JSString(v) => v
+    | _ => ""
+    }
+    ->addressType =>
+      switch addressType {
+      | "S" =>
+        switch coerceValS {
+        | Some(x) =>
+          x === val ?
+          Ok({key, val}) :
+          Error({
+            key,
+            val,
+            msg: ["got removed as the address type was determined as S"],
+            display: x
+          })
+        | None => Ok({key, val})
+        } 
+      | "K" =>
+        switch coerceValK {
+        | Some(x) =>
+          x === val ?
+          Ok({key, val}) :
+          Error({
+            key,
+            val,
+            msg: ["got removed as the address type was determined as K"],
+            display: x
+          })
+        | None => Ok({key, val})
+        } 
+      | _ =>
+        Error({
+          key,
+          val,
+          msg: ["fails before validation by address type as no address type could be determined"],
+          display: ""
+        })
+      }
+  | Error(err) => Error(err)
   }
 
 
 
-let validateEntries: array<entry> => array<entry> =
+let validateEntries: array<jsonEntry> => array<entry> =
   entries => {
     let data = Js.Dict.fromArray(entries)
 
-    let referenceTypeEntry = 
-      data 
-      ->validateEntry(
-          "referenceType",
-          ~fn= x => Formatter.removeWhitespace(x) ->Js.String2.match_(%re("/^(QRR|SCOR|NON)$/")), 
-          ~msg="must be either QRR, SCOR or NON",
-          ~display=""
-        )
-      ->entryFromValidationResult("referenceType")
+    let referenceTypeResult = 
+      data->validateEntry(
+        "referenceType",
+        ~fn= x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^(QRR|SCOR|NON)$/")), 
+        ~msg="must be either QRR, SCOR or NON",
+        ~display=""
+      )
 
-    let creditorAddressTypeEntry =
-      data
-      ->validateEntry(
-          "creditorAddressType",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^(K|S){1}$/")), 
-          ~msg="must be either K or S",
-          ~display="",
-        )
-      ->entryFromValidationResult("creditorAddressType")
+    let creditorAddressTypeResult =
+      data->validateEntry(
+        "creditorAddressType",
+        ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^(K|S){1}$/")), 
+        ~msg="must be either K or S",
+        ~display="",
+      )
 
-    let debtorAddressTypeEntry =
-      data
-      ->validateEntry(
-          "debtorAddressType",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^(K|S){1}$/")), 
-          ~msg="must be either K or S",
-          ~display="",
-        )
-      ->entryFromValidationResult("debtorAddressType")
+    let debtorAddressTypeResult =
+      data->validateEntry(
+        "debtorAddressType",
+        ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^(K|S){1}$/")), 
+        ~msg="must be either K or S",
+        ~display="",
+      )
 
-    [
-      data
-      ->validateEntry(
-          "lang",
-          ~fn= 
-            x => Formatter.removeWhitespace(x) ->Js.String2.match_(%re("/^(en|de|fr|it)$/")), 
-          ~msg="must be either en, de, fr, or it",
-          ~display=""
-        )
-      ->entryFromValidationResult("lang"),
+    let results = [
+      data->validateEntry(
+        "lang",
+        ~fn= x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^(en|de|fr|it)$/")), 
+        ~msg="must be either en, de, fr, or it",
+        ~display=""
+      ),
 
-      data
-      ->validateEntry(
-          "currency",
-          ~fn= x => Formatter.removeWhitespace(x) ->Js.String2.match_(%re("/^(CHF|EUR)$/")), 
-          ~msg="must be either CHF or EUR",
-          ~display=""
-        )
-      ->entryFromValidationResult("currency"),
+      data->validateEntry(
+        "currency",
+        ~fn= x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^(CHF|EUR)$/")), 
+        ~msg="must be either CHF or EUR",
+        ~display=""
+      ),
 
-      data
-      ->validateEntry(
-          "amount",
-          ~fn= 
-            x => 
-            Formatter.removeWhitespace(x)
-            ->Js.Float.fromString
-            ->Js.Float.toFixedWithPrecision(~digits=2)
-            ->Js.String2.match_(%re("/^([1-9]{1}[0-9]{0,8}\.[0-9]{2}|0\.[0-9]{1}[1-9]{1})$/")), 
-          ~msg="must be a number ranging from 0.01 to 999999999.99",
-          ~display=""
-        )
-      ->entryFromValidationResult("amount"),
+      data->validateEntry(
+        "amount",
+        ~fn= 
+          x => 
+          Formatter.removeWhitespace(x)
+          ->Js.Float.fromString
+          ->Js.Float.toFixedWithPrecision(~digits=2)
+          ->Js.String2.match_(%re("/^([1-9]{1}[0-9]{0,8}\.[0-9]{2}|0\.[0-9]{1}[1-9]{1})$/")), 
+        ~msg="must be a number ranging from 0.01 to 999999999.99",
+        ~display=""
+      ),
 
       data
       ->validateEntry(
@@ -319,167 +339,166 @@ let validateEntries: array<entry> => array<entry> =
           ~msg="must start with countryCode CH or LI followed by 19 digits (ex. CH1234567890123456789)",
           ~display=""
         )
-      ->validateIban
-      ->entryFromValidationResult("iban"),
+      ->validateIban,
 
-      referenceTypeEntry,
+      referenceTypeResult,
 
       data
       ->validateEntry(
           "reference",
-          ~fn= x => Formatter.removeWhitespace(x) ->Js.String2.match_(%re("/^[\s\S]{0,27}$/")), 
+          ~fn= x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^[\s\S]{0,27}$/")), 
           ~msg="must be at most 27 characters long",
           ~display=""
         )
-      ->validateReference(referenceTypeEntry)
-      ->entryFromValidationResult("reference"),
+      ->validateFromReferenceType(referenceTypeResult),
 
-      data
-      ->validateEntry(
-          "message",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{0,140}$/")),
-          ~msg="must be at most 140 characters long",
-          ~display=""
-        )
-      ->entryFromValidationResult("message"),
+      data->validateEntry(
+        "message",
+        ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,140}$/")),
+        ~msg="must be at most 140 characters long",
+        ~display=""
+      ),
 
-      data
-      ->validateEntry(
-          "messageCode",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{0,140}$/")),
-          ~msg="must be at most 140 characters long",
-          ~display=""
-        )
-      ->entryFromValidationResult("messageCode"),
+      data->validateEntry(
+        "messageCode",
+        ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,140}$/")),
+        ~msg="must be at most 140 characters long",
+        ~display=""
+      ),
 
-      creditorAddressTypeEntry,
+      creditorAddressTypeResult,
 
-      data
-      ->validateEntry(
-          "creditorName",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{1,70}$/")),
-          ~msg="must not be empty and at most 70 characters long",
-          ~display=""
-        )
-      ->entryFromValidationResult("creditorName"),
-
-      data
-      ->validateEntry(
-          "creditorStreet",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
-          ~msg="must be at most 70 characters long",
-          ~display=""
-        )
-      ->entryFromValidationResult("creditorStreet"),
+      data->validateEntry(
+        "creditorName",
+        ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{1,70}$/")),
+        ~msg="must not be empty and at most 70 characters long",
+        ~display=""
+      ),
 
       data
       ->validateEntry(
           "creditorStreetNumber",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
+          ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
           ~msg="must be at most 16 characters long",
           ~display=""
         )
-      ->entryFromValidationResult("creditorStreetNumber"),
+      ->validateFromAddressType(creditorAddressTypeResult, ~coerceValK=""),
 
-      data
-      ->validateEntry(
-          "creditorPostOfficeBox",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
-          ~msg="must be at most 70 characters long",
-          ~display=""
-        )
-      ->entryFromValidationResult("creditorPostOfficeBox"),
+      data->validateEntry(
+        "creditorStreet",
+        ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
+        ~msg="must be at most 70 characters long",
+        ~display=""
+      ),
+
+      data->validateEntry(
+        "creditorPostOfficeBox",
+        ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
+        ~msg="must be at most 70 characters long",
+        ~display=""
+      ),
 
       data
       ->validateEntry(
           "creditorPostalCode",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
+          ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
           ~msg="must be at most 16 characters long",
           ~display=""
         )
-      ->entryFromValidationResult("creditorPostalCode"),
+      ->validateFromAddressType(creditorAddressTypeResult, ~coerceValK=""),
 
-      data
-      ->validateEntry(
-          "creditorLocality",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{1,35}$/")),
-          ~msg="must not be empty and at most 35 characters long",
-          ~display=""
-        )
-      ->entryFromValidationResult("creditorLocality"),
+      data->validateEntry(
+        "creditorLocality",
+        ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{1,35}$/")),
+        ~msg="must not be empty and at most 35 characters long",
+        ~display=""
+      ),
 
-      data
-      ->validateEntry(
-          "creditorCountryCode",
-          ~fn= x => Formatter.removeWhitespace(x) ->Js.String2.match_(%re("/^\S{2}$/")),
-          ~msg="must be 2 characters long",
-          ~display=""
-        )
-      ->entryFromValidationResult("creditorCountryCode"),
+      data->validateEntry(
+        "creditorCountryCode",
+        ~fn= x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^\S{2}$/")),
+        ~msg="must be 2 characters long",
+        ~display=""
+      ),
 
-      debtorAddressTypeEntry,
+      debtorAddressTypeResult,
 
-      data
-      ->validateEntry(
-          "debtorName",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{1,70}$/")),
-          ~msg="must not be empty and at most 70 characters long",
-          ~display=""
-        )
-      ->entryFromValidationResult("debtorName"),
-
-      data
-      ->validateEntry(
-          "debtorStreet",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
-          ~msg="must be at most 70 characters long",
-          ~display=""
-        )
-      ->entryFromValidationResult("debtorStreet"),
+      data->validateEntry(
+        "debtorName",
+        ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{1,70}$/")),
+        ~msg="must not be empty and at most 70 characters long",
+        ~display=""
+      ),
 
       data
       ->validateEntry(
           "debtorStreetNumber",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
+          ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
           ~msg="must be at most 16 characters long",
           ~display=""
         )
-      ->entryFromValidationResult("debtorStreetNumber"),
+      ->validateFromAddressType(debtorAddressTypeResult, ~coerceValK=""),
 
-      data
-      ->validateEntry(
-          "debtorPostOfficeBox",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
-          ~msg="must be at most 70 characters long",
-          ~display=""
-        )
-      ->entryFromValidationResult("debtorPostOfficeBox"),
+      data->validateEntry(
+        "debtorStreet",
+        ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
+        ~msg="must be at most 70 characters long",
+        ~display=""
+      ),
+
+      data->validateEntry(
+        "debtorPostOfficeBox",
+        ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
+        ~msg="must be at most 70 characters long",
+        ~display=""
+      ),
 
       data
       ->validateEntry(
           "debtorPostalCode",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
+          ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
           ~msg="must be at most 16 characters long",
           ~display=""
         )
-      ->entryFromValidationResult("debtorPostalCode"),
+      ->validateFromAddressType(debtorAddressTypeResult, ~coerceValK=""),
         
-      data
-      ->validateEntry(
-          "debtorLocality",
-          ~fn= x => Js.String2.trim(x) ->Js.String2.match_(%re("/^[\s\S]{1,35}$/")),
-          ~msg="must not be emtpy and at most 35 characters long",
-          ~display=""
-        )
-      ->entryFromValidationResult("debtorLocality"),
+      data->validateEntry(
+        "debtorLocality",
+        ~fn= x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{1,35}$/")),
+        ~msg="must not be emtpy and at most 35 characters long",
+        ~display=""
+      ),
 
-      data
-      ->validateEntry(
-          "debtorCountryCode",
-          ~fn= x => Formatter.removeWhitespace(x) ->Js.String2.match_(%re("/^\S{2}$/")),
-          ~msg="must be 2 characters long",
-          ~display=""
-        )
-      ->entryFromValidationResult("debtorCountryCode")
+      data->validateEntry(
+        "debtorCountryCode",
+        ~fn= x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^\S{2}$/")),
+        ~msg="must be 2 characters long",
+        ~display=""
+      )
     ]
+
+
+
+    let errors = 
+      Js.Array2.filter(results, 
+        x => 
+        switch x {
+        | Ok(_) => false
+        | Error(_) => true
+        }
+      )
+
+
+
+    Js.Array2.forEach(errors,
+      x =>
+      switch x {
+      | Ok(_) => ()
+      | Error(err) => Js.log(err.key++ " " ++Js.Array2.joinWith(err.msg, " and "))
+      }
+    )
+
+
+
+    Js.Array2.map(results, entryFromValidationResult)
   }

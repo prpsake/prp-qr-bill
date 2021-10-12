@@ -1,2 +1,3 @@
+type jsonEntry
 type entry
-let validateEntries: array<entry> => array<entry>
+let validateEntries: array<jsonEntry> => array<entry>

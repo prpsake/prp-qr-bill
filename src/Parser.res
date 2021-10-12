@@ -1,8 +1,8 @@
-type entry = (string, Js.Json.t)
+type jsonEntry = (string, Js.Json.t)
 
 
 
-let defaultRootEntries: array<entry> = {
+let defaultRootEntries: array<jsonEntry> = {
   open Js.Json
   [
     ("lang", string("en")),
@@ -17,7 +17,7 @@ let defaultRootEntries: array<entry> = {
 
 
 
-let defaultAddressEntries: array<entry> = {
+let defaultAddressEntries: array<jsonEntry> = {
   open Js.Json
   [
     ("name", string("")),
@@ -32,7 +32,7 @@ let defaultAddressEntries: array<entry> = {
 
 
 
-let defaultEntries: array<entry> = {
+let defaultEntries: array<jsonEntry> = {
   open Js.Json
   defaultRootEntries
   ->Js.Array2.concat([
@@ -43,7 +43,7 @@ let defaultEntries: array<entry> = {
 
 
 
-let prefixEntryKeysWith: array<entry> => string => array<entry> =
+let prefixEntryKeysWith: array<jsonEntry> => string => array<jsonEntry> =
   entries =>
   key =>
   Js.Array2.map(entries, ((k, v)) => {
@@ -56,7 +56,7 @@ let prefixEntryKeysWith: array<entry> => string => array<entry> =
 
 
 
-let entryFromData: Js.Dict.t<Js.Json.t> => entry => entry =
+let entryFromData: Js.Dict.t<Js.Json.t> => jsonEntry => jsonEntry =
   data =>
   ((k, v)) =>
   switch Js.Dict.get(data, k) {
@@ -71,7 +71,7 @@ let entryFromData: Js.Dict.t<Js.Json.t> => entry => entry =
 
 
 
-let entriesFromNestedData: Js.Dict.t<Js.Json.t> => array<entry> => string => array<entry> =
+let entriesFromNestedData: Js.Dict.t<Js.Json.t> => array<jsonEntry> => string => array<jsonEntry> =
   data =>
   defaultNestedEntries =>
   key =>
@@ -88,9 +88,7 @@ let entriesFromNestedData: Js.Dict.t<Js.Json.t> => array<entry> => string => arr
 
 
 
-
-
-let referenceTypeEntryFromEntries: array<entry> => array<entry> =
+let referenceTypeEntryFromEntries: array<jsonEntry> => array<jsonEntry> =
   entries =>
   Js.Dict.fromArray(entries)
   ->data =>
@@ -122,13 +120,13 @@ let referenceTypeEntryFromEntries: array<entry> => array<entry> =
 
 
 
-let addressTypeEntryFromEntries: array<entry> => array<entry> =
+let addressTypeEntryFromEntries: array<jsonEntry> => array<jsonEntry> =
   entries =>
   Js.Array2.filter(
     entries, 
     ((k, _)) => k == "streeNumber" || k == "postalCode"
   )
-  ->Js.Array2.some(
+  ->Js.Array2.some( // QUESTION: .every ?
       ((_, v)) =>
       switch Js.Json.classify(v) {
       | JSONString(v) => v != ""
@@ -141,7 +139,7 @@ let addressTypeEntryFromEntries: array<entry> => array<entry> =
 
 
 
-let rootEntriesFromData: Js.Dict.t<Js.Json.t> => array<entry> =
+let rootEntriesFromData: Js.Dict.t<Js.Json.t> => array<jsonEntry> =
   data => 
   defaultRootEntries
   ->Js.Array2.map(entryFromData(data))
@@ -149,7 +147,7 @@ let rootEntriesFromData: Js.Dict.t<Js.Json.t> => array<entry> =
 
 
 
-let addressEntriesFromData: Js.Dict.t<Js.Json.t> => string => array<entry> =
+let addressEntriesFromData: Js.Dict.t<Js.Json.t> => string => array<jsonEntry> =
   data =>
   key =>
   entriesFromNestedData(data, defaultAddressEntries, key)
@@ -158,7 +156,7 @@ let addressEntriesFromData: Js.Dict.t<Js.Json.t> => string => array<entry> =
 
 
 
-let parseJson: string => array<entry> =
+let parseJson: string => array<jsonEntry> =
   str =>
   try {
     let json = Js.Json.parseExn(str)

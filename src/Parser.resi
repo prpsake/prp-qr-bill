@@ -1,2 +1,2 @@
-type entry
-let parseJson: string => array<entry>
+type jsonEntry
+let parseJson: string => array<jsonEntry>
