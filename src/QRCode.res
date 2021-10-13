@@ -1,153 +1,4 @@
-/*
-
-Links:
-https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-en.pdf#page=28
-https://regex101.com/
-
-*/
-
-
-
-// Header
-
-type qrType = [#SPC]
-type version = [#"0200"]
-type encoding = [#1]
-
-
-type header = {
-  qrType: qrType, // QRType
-  version: version, // Version
-  encoding: encoding, // Coding
-}
-
-
-let header: header = {
-  qrType: #SPC,
-  version: #"0200",
-  encoding: #1,
-}
-
-
-
-// CdtrInf
-
-type creditorInfo = {iban: string}
-
-
-
-// Cdtr(, UltmtDbtr)
-
-type addressType = [#S | #K]
-
-
-type address = {
-  addressType: addressType,
-  name: string,
-  streetOrAddressLine1: string,
-  streetNumberOrAddressLine2: string,
-  postalCode: string,
-  locality: string,
-  countryCode: string,
-}
-
-
-
-// UltmtCdtr (use type address when used in future)
-
-type ultimateCreditorAddress = {
-  addressType: string,
-  name: string,
-  streetOrAddressLine1: string,
-  streetNumberOrAddressLine2: string,
-  postalCode: string,
-  locality: string,
-  countryCode: string,
-}
-
-
-let ultimateCreditorEmpty: ultimateCreditorAddress = {
-  addressType: "",
-  name: "",
-  streetOrAddressLine1: "",
-  streetNumberOrAddressLine2: "",
-  postalCode: "",
-  locality: "",
-  countryCode: "",
-}
-
-
-
-// CcyAmt
-
-type currency = [#CHF | #EUR]
-
-
-type money = {
-  amount: float,
-  currency: currency,
-}
-
-
-
-// RmtInf
-
-type referenceType = [#QRR | #SCOR | #NON]
-
-
-type reference = {
-  referenceType: referenceType,
-  referenceCode: string,
-}
-
-
-
-// AddInf
-
-type trailer = [#EPD]
-
-
-type additionalInfo = {
-  unstructured: string,
-  trailer: trailer,
-  structured: string,
-}
-
-
-
-// AltPmtInf
-
-type alternativeInfo = {
-  paramLine1: string,
-  paramLine2: string,
-}
-
-
-
-// QR Code Data Rec
-
-type qrCodeData = {
-  header: header,
-  creditorInfo: creditorInfo,
-  creditor: address,
-  ultimateCreditor: address,
-  money: money,
-  ultimateDebtor: ultimateCreditorAddress,
-  referenceInfo: reference,
-  additionalInfo: additionalInfo,
-  alternativeInfo: alternativeInfo,
-}
-
-
-
 type entry = (string, string)
-
-
-
-let join: array<string> => string =
-  values =>
-  Js.Array2.joinWith(values, " ")
-  ->Js.String2.trim
 
 
 
@@ -161,23 +12,57 @@ let valueFromEntry: Js.Dict.t<string> => string => string =
 
 
 
-let qrCodeString: array<entry> => string =
+let stringFromEntries: array<entry> => string =
   entries => {
     let data = Js.Dict.fromArray(entries)
     [
+      // header
+      "SPC",
+      "0200",
+      "1",
+
+      // account
       data->valueFromEntry("iban"),
-      data->valueFromEntry("creditorAddresstype"),
+
+      // creditor
+      "K",
       data->valueFromEntry("creditorName"),
-      join([
-        data->valueFromEntry("creditorStreet"),
-        data->valueFromEntry("creditorStreetNumber"),
-        data->valueFromEntry("creditorPostOfficeBox")
-      ]),
-      join([
-        data->valueFromEntry("creditorPostalCode"),
-        data->valueFromEntry("creditorLocality")
-      ])
-  
+      data->valueFromEntry("creditorAddressLine1"),
+      data->valueFromEntry("creditorAddressLine2"),
+      "",
+      "",
+      data->valueFromEntry("creditorCountryCode"),
+      
+      // ultimate creditor (future FEATURE)
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+
+      // ultimate debtor
+      "K",
+      data->valueFromEntry("debtorName"),
+      data->valueFromEntry("debtorAddressLine1"),
+      data->valueFromEntry("debtorAddressLine2"),
+      "",
+      "",
+      data->valueFromEntry("debtorCountryCode"),
+
+      // reference
+      data->valueFromEntry("referenceType"),
+      data->valueFromEntry("reference"),
+
+      // additional information
+      data->valueFromEntry("message"),
+      "EPD",
+      data->valueFromEntry("messageCode"),
+
+      // alternative information (IMPLEMENT)
+      "",
+      ""
     ]
     ->Js.Array2.joinWith("\n")
   }

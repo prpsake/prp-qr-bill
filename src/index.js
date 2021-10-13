@@ -23,12 +23,14 @@
 */
 
 
-import { define, html, property } from 'hybrids'
-import { setPropsFromData, setBoolFromVersions } from './Factories.js'
-import { translate } from './Translations.bs.js'
-import * as Formatter from './Formatter.bs.js'
 import styles from './index.a.css'
-
+import { define, html, property } from 'hybrids'
+import { setBoolFromVersions } from './Factories.js'
+import { translate } from './Translations.bs.js'
+import * as Parser from './Parser.bs.js'
+import * as Validator from './Validator.bs.js'
+import * as QRCode from './QRCode.bs.js'
+import * as Formatter from './Formatter.bs.js'
 
 
 
@@ -58,7 +60,12 @@ const blankField =
 
 const AQRBill = {
   tag: 'a-qr-bill',
-  data: setPropsFromData(),
+  data: property(Parser.parseJson, (host, key) => {
+    const entries = Validator.validateEntries(host[key])
+    const qrString = QRCode.stringFromEntries(entries)
+    console.log(qrString)
+    entries.forEach(([k, v]) => host[k] = v)
+  }),
 
   version: '',
   lang: property(translate),
@@ -71,13 +78,11 @@ const AQRBill = {
   message: '', // Notification (unstructred)
   messageCode: '', // Bill Information (structured)
 
-  creditorAddressType: '',
   creditorName: '',
   creditorAddressLine1: '',
   creditorAddressLine2: '',
   creditorCountryCode: '',
 
-  debtorAddressType: '',
   debtorName: '',
   debtorAddressLine1: '',
   debtorAddressLine2: '',

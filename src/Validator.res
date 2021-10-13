@@ -394,8 +394,6 @@ let validateEntries: array<jsonEntry> => array<entry> =
 
     let results = [
       referenceTypeResult,
-      creditorAddressTypeResult,
-      debtorAddressTypeResult,
 
       data
       ->valueFromJsonEntry("lang")
