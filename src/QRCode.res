@@ -170,7 +170,8 @@ let qrCodeString: array<entry> => string =
       data->valueFromEntry("creditorName"),
       join([
         data->valueFromEntry("creditorStreet"),
-        data->valueFromEntry("creditorStreetNumber")
+        data->valueFromEntry("creditorStreetNumber"),
+        data->valueFromEntry("creditorPostOfficeBox")
       ]),
       join([
         data->valueFromEntry("creditorPostalCode"),

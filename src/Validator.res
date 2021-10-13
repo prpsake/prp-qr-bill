@@ -96,32 +96,38 @@ let mod10FromIntString: string => string =
 
 
 
-let concatResult: validationResult<'a> => validationResult<'a> => validationResult<'a> =
-  result =>
-  otherResult =>
-  switch result {
-  | Ok({key, val}) =>
-    switch otherResult {
-    | Ok({ val as otherVal }) => Ok({key, val: val++ " " ++otherVal})
-    | Error(err) => Error(err)
-    }
-  | Error(err) =>
-    switch otherResult {
-    | Ok(_) => Error(err)
-    | Error({key, val, msg, display}) => 
-      Error({key, val, msg: Js.Array.concat(msg, err.msg), display})
-    }
-  }
+// let isAddressStructured: validationResult<'a> => validationResult<'a> => validationResult<'a> =
+//   result =>
 
 
 
-let entryKey: validationResult<'a> => string => validationResult<'a> =
-  result =>
-  key =>
-  switch result {
-  | Ok({val}) => Ok({key, val})
-  | Error({val, msg, display}) => Error({key, val, msg, display})
-  }
+
+// let concatResult: validationResult<'a> => validationResult<'a> => validationResult<'a> =
+//   result =>
+//   otherResult =>
+//   switch result {
+//   | Ok({key, val}) =>
+//     switch otherResult {
+//     | Ok({ val as otherVal }) => Ok({key, val: val++ " " ++otherVal})
+//     | Error(err) => Error(err)
+//     }
+//   | Error(err) =>
+//     switch otherResult {
+//     | Ok(_) => Error(err)
+//     | Error({key, val, msg, display}) => 
+//       Error({key, val, msg: Js.Array.concat(msg, err.msg), display})
+//     }
+//   }
+
+
+
+// let entryKey: validationResult<'a> => string => validationResult<'a> =
+//   result =>
+//   key =>
+//   switch result {
+//   | Ok({val}) => Ok({key, val})
+//   | Error({val, msg, display}) => Error({key, val, msg, display})
+//   }
 
 
 
@@ -259,58 +265,6 @@ let validateFromReferenceType: validationResult<'a> => validationResult<'a> => v
 
 
 
-let validateFromAddressType: validationResult<'a> => (~coerceValS: string=?, ~coerceValK: string=?) => validationResult<'a> => validationResult<'a> =
-  result =>
-  (~coerceValS=?, ~coerceValK=?) =>
-  otherResult =>
-  switch result {
-  | Ok({key, val}) =>
-    let (_, v) = otherResult->entryFromValidationResult
-    switch Js.Types.classify(v) {
-    | JSString(v) => v
-    | _ => ""
-    }
-    ->addressType =>
-      switch addressType {
-      | "S" =>
-        switch coerceValS {
-        | Some(x) =>
-          x === val ?
-          Ok({key, val}) :
-          Error({
-            key,
-            val,
-            msg: ["got removed as the address type was determined as S"],
-            display: x
-          })
-        | None => Ok({key, val})
-        } 
-      | "K" =>
-        switch coerceValK {
-        | Some(x) =>
-          x === val ?
-          Ok({key, val}) :
-          Error({
-            key,
-            val,
-            msg: ["got removed as the address type was determined as K"],
-            display: x
-          })
-        | None => Ok({key, val})
-        } 
-      | _ =>
-        Error({
-          key,
-          val,
-          msg: ["fails before validation by address type as no address type could be determined"],
-          display: ""
-        })
-      }
-  | Error(err) => Error(err)
-  }
-
-
-
 let validateEntries: array<jsonEntry> => array<entry> =
   entries => {
     let data = Js.Dict.fromArray(entries)
@@ -321,22 +275,6 @@ let validateEntries: array<jsonEntry> => array<entry> =
       ->validateWithRe(
           x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^(QRR|SCOR|NON)$/")), 
           "must be either QRR, SCOR or NON"
-        )
-
-    let creditorAddressTypeResult =
-      data
-      ->valueFromJsonEntry("creditorAddressType")
-      ->validateWithRe(
-          x => Js.String2.trim(x)->Js.String2.match_(%re("/^(K|S){1}$/")),
-          "must be either K or S"
-        )
-
-    let debtorAddressTypeResult =
-      data
-      ->valueFromJsonEntry("debtorAddressType")
-      ->validateWithRe(
-          x => Js.String2.trim(x)->Js.String2.match_(%re("/^(K|S){1}$/")),
-          "must be either K or S"
         )
 
     let results = [
@@ -400,7 +338,12 @@ let validateEntries: array<jsonEntry> => array<entry> =
           "must be at most 140 characters long"
         ),
 
-      creditorAddressTypeResult,
+      data
+      ->valueFromJsonEntry("creditorAddressType")
+      ->validateWithRe(
+          x => Js.String2.trim(x)->Js.String2.match_(%re("/^(K|S){1}$/")),
+          "must be either K or S"
+        ),
 
       data
       ->valueFromJsonEntry("creditorName")
@@ -414,8 +357,7 @@ let validateEntries: array<jsonEntry> => array<entry> =
       ->validateWithRe(
           x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
           "must be at most 16 characters long"
-        )
-      ->validateFromAddressType(creditorAddressTypeResult, ~coerceValK=""),
+        ),
 
       data
       ->valueFromJsonEntry("creditorStreet")
@@ -436,8 +378,7 @@ let validateEntries: array<jsonEntry> => array<entry> =
       ->validateWithRe(
           x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
           "must be at most 16 characters long"
-        )
-      ->validateFromAddressType(creditorAddressTypeResult, ~coerceValK=""),
+        ),
 
       data
       ->valueFromJsonEntry("creditorLocality")
@@ -453,7 +394,12 @@ let validateEntries: array<jsonEntry> => array<entry> =
           "must be 2 characters long"
         ),
 
-      debtorAddressTypeResult,
+      data
+      ->valueFromJsonEntry("debtorAddressType")
+      ->validateWithRe(
+          x => Js.String2.trim(x)->Js.String2.match_(%re("/^(K|S){1}$/")),
+          "must be either K or S"
+        ),
 
       data
       ->valueFromJsonEntry("debtorName")
@@ -467,8 +413,7 @@ let validateEntries: array<jsonEntry> => array<entry> =
       ->validateWithRe(
           x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
           "must be at most 16 characters long"
-        )
-      ->validateFromAddressType(debtorAddressTypeResult, ~coerceValK=""),
+        ),
 
       data
       ->valueFromJsonEntry("debtorStreet")
@@ -489,8 +434,7 @@ let validateEntries: array<jsonEntry> => array<entry> =
       ->validateWithRe(
           x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
           "must be at most 16 characters long"
-        )
-      ->validateFromAddressType(debtorAddressTypeResult, ~coerceValK=""),
+        ),
 
       data
       ->valueFromJsonEntry("debtorLocality")
