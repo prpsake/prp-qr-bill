@@ -88,7 +88,7 @@ let entriesFromNestedData: Js.Dict.t<Js.Json.t> => array<jsonEntry> => string =>
 
 
 
-let entriesFromReferenceType: array<jsonEntry> => array<jsonEntry> =
+let referenceTypeEntryFromEntries: array<jsonEntry> => array<jsonEntry> =
   entries =>
   Js.Dict.fromArray(entries)
   ->data =>
@@ -115,22 +115,12 @@ let entriesFromReferenceType: array<jsonEntry> => array<jsonEntry> =
       }
     | None => "NON"
     }
-  ->value => (
-      value == "NON" ?
-      Js.Array2.map(
-        entries,
-        ((k, v)) => 
-        k == "reference" ?
-        (k, Js.Json.string("")) :
-        (k, v)
-      ) :
-      entries
-    )
-    ->Js.Array.concat([("referenceType", Js.Json.string(value))])
+  ->value => [("referenceType", Js.Json.string(value))]
+  ->Js.Array2.concat(entries)
 
 
 
-let addressEntriesFromAddressType: array<jsonEntry> => array<jsonEntry> =
+let addressTypeEntryFromEntries: array<jsonEntry> => array<jsonEntry> =
   entries =>
   Js.Array2.filter(
     entries, 
@@ -143,42 +133,9 @@ let addressEntriesFromAddressType: array<jsonEntry> => array<jsonEntry> =
       | _ => false
       } 
     )
-  ->isStructured =>
-    isStructured ?
-    Js.Array.concat([("addressType", Js.Json.string("S"))], entries) :
-    Js.Array2.map(
-      entries,
-      ((k, v)) => 
-      k == "streetNumber" || k == "postalCode" ?
-      (k, Js.Json.string("")) :
-      (k, v)
-    ) // TODO: log removal
-    ->Js.Array.concat([("addressType", Js.Json.string("K"))])
-
-
-
-let addressEntriesFromPostOfficeBox: array<jsonEntry> => array<jsonEntry> =
-  entries =>
-  Js.Array2.find(entries, ((k, _)) => k == "postOfficeBox")
-  ->result =>
-    switch result {
-    | Some(((_, v))) =>
-      switch Js.Json.classify(v) {
-      | JSONString(v) => v != ""
-      | _ => false
-      }
-    | None => false
-    }
-  ->hasPostOfficeBox =>
-    hasPostOfficeBox ?
-    Js.Array2.map(
-      entries,
-      ((k, v)) => 
-      k == "street" || k == "streetNumber" ?
-      (k, Js.Json.string("")) :
-      (k, v)
-    ) :
-    entries // TODO: log removal
+  ->isStructured => (isStructured ? "S" : "K")
+  ->value => [("addressType", Js.Json.string(value))]
+  ->Js.Array2.concat(entries)
 
 
 
@@ -186,7 +143,7 @@ let rootEntriesFromData: Js.Dict.t<Js.Json.t> => array<jsonEntry> =
   data => 
   defaultRootEntries
   ->Js.Array2.map(entryFromData(data))
-  ->entriesFromReferenceType
+  ->referenceTypeEntryFromEntries
 
 
 
@@ -194,8 +151,7 @@ let addressEntriesFromData: Js.Dict.t<Js.Json.t> => string => array<jsonEntry> =
   data =>
   key =>
   entriesFromNestedData(data, defaultAddressEntries, key)
-  ->addressEntriesFromAddressType
-  ->addressEntriesFromPostOfficeBox
+  ->addressTypeEntryFromEntries
   ->prefixEntryKeysWith(key)
 
 

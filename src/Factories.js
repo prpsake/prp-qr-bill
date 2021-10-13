@@ -9,11 +9,9 @@ const setPropsFromData =
   ({
     ...property(Parser.parseJson),
     connect: (host, key) => {
-      const entries = host[key]
-      console.log(entries)
-      console.log(Validator.validateEntries(entries))
-      // optionally validate...
-      entries.forEach(([k, v]) => host[k] = v)
+      Validator
+      .validateEntries(host[key])
+      .forEach(([k, v]) => host[k] = v)
     }
   })
 

@@ -95,39 +95,32 @@ let mod10FromIntString: string => string =
   }
 
 
-
-// let isAddressStructured: validationResult<'a> => validationResult<'a> => validationResult<'a> =
-//   result =>
-
-
-
-
-// let concatResult: validationResult<'a> => validationResult<'a> => validationResult<'a> =
-//   result =>
-//   otherResult =>
-//   switch result {
-//   | Ok({key, val}) =>
-//     switch otherResult {
-//     | Ok({ val as otherVal }) => Ok({key, val: val++ " " ++otherVal})
-//     | Error(err) => Error(err)
-//     }
-//   | Error(err) =>
-//     switch otherResult {
-//     | Ok(_) => Error(err)
-//     | Error({key, val, msg, display}) => 
-//       Error({key, val, msg: Js.Array.concat(msg, err.msg), display})
-//     }
-//   }
+let concatResult: validationResult<'a> => validationResult<'a> => validationResult<'a> =
+  result =>
+  otherResult =>
+  switch result {
+  | Ok({key, val}) =>
+    switch otherResult {
+    | Ok({ val as otherVal }) => Ok({key, val: Js.String.trim(val++ " " ++otherVal)})
+    | Error(err) => Error(err)
+    }
+  | Error(err) =>
+    switch otherResult {
+    | Ok(_) => Error(err)
+    | Error({key, val, msg, display}) => 
+      Error({key, val, msg: Js.Array.concat(msg, err.msg), display})
+    }
+  }
 
 
 
-// let entryKey: validationResult<'a> => string => validationResult<'a> =
-//   result =>
-//   key =>
-//   switch result {
-//   | Ok({val}) => Ok({key, val})
-//   | Error({val, msg, display}) => Error({key, val, msg, display})
-//   }
+let entryKey: validationResult<'a> => string => validationResult<'a> =
+  result =>
+  key =>
+  switch result {
+  | Ok({val}) => Ok({key, val})
+  | Error({val, msg, display}) => Error({key, val, msg, display})
+  }
 
 
 
@@ -156,7 +149,7 @@ let valueFromJsonEntry: Js.Dict.t<Js.Json.t> => string => validationResult<'a> =
 
 
 
-let validateWithRe: validationResult<'a> => (string => option<array<string>>) => string => validationResult<'a> =
+let validateWithRexp: validationResult<'a> => (string => option<array<string>>) => string => validationResult<'a> =
   result =>
   fn =>
   errMsg =>
@@ -217,7 +210,50 @@ let validateIban: validationResult<'a> => validationResult<'a> =
 
 
 
-let validateFromReferenceType: validationResult<'a> => validationResult<'a> => validationResult<'a> =
+let validateQRR: validationSuccess => validationResult<'a> =
+  ({key, val}) =>
+  mod10FromIntString(val)
+  ->a => {
+      let b = Js.String2.sliceToEnd(val, ~from=26)
+      a == b ?
+      Ok({key, val}) :
+      Error({
+        key,
+        val,
+        msg: ["fails on the check digit: expected" ++b++ " but got " ++a],
+        display: ""
+      })
+    }
+  ->validateWithRexp(
+      x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^[\S]{27}$/")),
+      "must be 27 characters long"
+    )
+
+
+
+let validateSCOR: validationSuccess => validationResult<'a> =
+  ({key, val}) =>
+  Ok({key, val}) //TODO: missing actual validation
+  ->validateWithRexp(
+      x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^[\S]{5,25}$/")),
+      "must be 27 characters long"
+    )
+
+
+
+let validateNON: validationSuccess => validationResult<'a> =
+  ({key, val}) =>
+  val === "" ? 
+  Ok({key, val}) :
+  Error({
+    key,
+    val,
+    msg: ["got removed as the reference type was determined as NON"],
+    display: ""
+  })
+
+
+let validateWithReferenceType: validationResult<'a> => validationResult<'a> => validationResult<'a> =
   result =>
   otherResult =>
   switch result {
@@ -229,38 +265,85 @@ let validateFromReferenceType: validationResult<'a> => validationResult<'a> => v
     }
     ->referenceType =>
       switch referenceType {
-      | "QRR" =>
-        mod10FromIntString(val)
-        ->a => {
-          let b = Js.String2.sliceToEnd(val, ~from=26)
-          a == b ?
-          Ok({key, val}) :
-          Error({
-            key,
-            val,
-            msg: ["fails on the check digit: expected" ++b++ " but got " ++a],
-            display: ""
-          })
-        }
-      | "SCOR" => Ok({key, val}) //TODO: validation
-      | "NON" =>
-        val === "" ? 
-        Ok({key, val}) :
-        Error({
-          key,
-          val,
-          msg: ["got removed as the reference type was determined as NON"],
-          display: ""
-        })
+      | "QRR" => validateQRR({key, val})
+      | "SCOR" => validateSCOR({key, val})
+      | "NON" => validateNON({key, val})
       | _ =>
         Error({
           key,
           val,
-          msg: ["fails before calculating the check digit as no reference type could be determined"],
+          msg: ["fails as no reference type could be determined"],
           display: ""
         })
       }
   | Error(err) => Error(err)
+  }
+
+
+
+let validateWithAddressType: 
+  validationResult<'a> => 
+  validationResult<'a> => 
+  (validationResult<'a> => validationResult<'a>) =>
+  (validationResult<'a> => validationResult<'a>) => 
+  validationResult<'a> =
+  result =>
+  otherResult =>
+  fnS =>
+  fnK =>
+  switch result {
+  | Ok({key, val}) =>
+    let (_, v) = otherResult->entryFromValidationResult
+    switch Js.Types.classify(v) {
+    | JSString(v) => v
+    | _ => ""
+    }
+    ->addressType =>
+      switch addressType {
+      | "S" => fnS(result)
+      | "K" => fnK(result)
+      | _ =>
+        Error({
+          key,
+          val,
+          msg: ["fails as no address type could be determined"],
+          display: ""
+        })
+      }
+  | Error(err) => Error(err)
+  }
+
+
+
+let validateWithPostOfficeBox: validationResult<'a> => validationResult<'a> => validationResult<'a> =
+  result =>
+  otherResult => {
+    let (_, otherVal) = otherResult->entryFromValidationResult
+    let postOfficeBox = 
+      switch Js.Types.classify(otherVal) {
+      | JSString(v) => v
+      | _ => ""
+      }
+    switch result {
+    | Ok({key, val}) =>
+      postOfficeBox == "" ?
+      Ok({key, val}) :
+      Error({
+        key,
+        val,
+        msg: ["street and street number values got replaced with the post office box value"],
+        display: postOfficeBox
+      })
+    | Error(err) => 
+      postOfficeBox == "" ?
+      Error(err) :
+      Error({
+        key: err.key,
+        val: err.val,
+        msg: ["street or street number value errored but got replaced with the post office box value anyway"],
+        display: postOfficeBox
+      })
+    }
   }
 
 
@@ -272,29 +355,65 @@ let validateEntries: array<jsonEntry> => array<entry> =
     let referenceTypeResult =
       data
       ->valueFromJsonEntry("referenceType")
-      ->validateWithRe(
+      ->validateWithRexp(
           x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^(QRR|SCOR|NON)$/")), 
           "must be either QRR, SCOR or NON"
         )
 
+    let creditorAddressTypeResult =
+      data
+      ->valueFromJsonEntry("creditorAddressType")
+      ->validateWithRexp(
+          x => Js.String2.trim(x)->Js.String2.match_(%re("/^(K|S){1}$/")),
+          "must be either K or S"
+        )
+
+    let creditorPostOfficeBoxResult =
+      data
+      ->valueFromJsonEntry("creditorPostOfficeBox")
+      ->validateWithRexp(
+          x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
+          "must be at most 70 characters long"
+        )
+
+    let debtorAddressTypeResult =
+      data
+      ->valueFromJsonEntry("debtorAddressType")
+      ->validateWithRexp(
+          x => Js.String2.trim(x)->Js.String2.match_(%re("/^(K|S){1}$/")),
+          "must be either K or S"
+        )
+    
+    let debtorPostOfficeBoxResult =
+      data
+      ->valueFromJsonEntry("debtorPostOfficeBox")
+      ->validateWithRexp(
+          x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
+          "must be at most 70 characters long"
+        )
+
     let results = [
+      referenceTypeResult,
+      creditorAddressTypeResult,
+      debtorAddressTypeResult,
+
       data
       ->valueFromJsonEntry("lang")
-      ->validateWithRe(
+      ->validateWithRexp(
           x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^(en|de|fr|it)$/")),
           "must be either en, de, fr, or it"
         ),
 
       data
       ->valueFromJsonEntry("currency")
-      ->validateWithRe(
+      ->validateWithRexp(
           x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^(CHF|EUR)$/")),
           "must be either CHF or EUR"
         ),
 
       data
       ->valueFromJsonEntry("amount")
-      ->validateWithRe(
+      ->validateWithRexp(
           x => 
           Formatter.removeWhitespace(x)
           ->Js.Float.fromString
@@ -305,7 +424,7 @@ let validateEntries: array<jsonEntry> => array<entry> =
 
       data
       ->valueFromJsonEntry("iban")
-      ->validateWithRe(
+      ->validateWithRexp(
           x => 
           Formatter.removeWhitespace(x)
           ->Js.String2.toUpperCase
@@ -314,138 +433,142 @@ let validateEntries: array<jsonEntry> => array<entry> =
         )
       ->validateIban,
 
-      referenceTypeResult,
-
       data
       ->valueFromJsonEntry("reference")
-      ->validateWithRe(
-          x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^[\s\S]{0,27}$/")),
-          "must be at most 27 characters long"
-        )
-      ->validateFromReferenceType(referenceTypeResult),
+      ->validateWithReferenceType(referenceTypeResult),
 
       data
       ->valueFromJsonEntry("message")
-      ->validateWithRe(
+      ->validateWithRexp(
           x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,140}$/")),
           "must be at most 140 characters long"
         ),
 
       data
       ->valueFromJsonEntry("messageCode")
-      ->validateWithRe(
+      ->validateWithRexp(
           x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,140}$/")),
           "must be at most 140 characters long"
         ),
 
       data
-      ->valueFromJsonEntry("creditorAddressType")
-      ->validateWithRe(
-          x => Js.String2.trim(x)->Js.String2.match_(%re("/^(K|S){1}$/")),
-          "must be either K or S"
-        ),
-
-      data
       ->valueFromJsonEntry("creditorName")
-      ->validateWithRe(
+      ->validateWithRexp(
           x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{1,70}$/")),
           "must not be empty and at most 70 characters long"
         ),
 
       data
-      ->valueFromJsonEntry("creditorStreetNumber")
-      ->validateWithRe(
-          x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
-          "must be at most 16 characters long"
-        ),
-
-      data
       ->valueFromJsonEntry("creditorStreet")
-      ->validateWithRe(
+      ->validateWithRexp(
           x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
-          "must be at most 70 characters long"
-        ),
-
-      data
-      ->valueFromJsonEntry("creditorPostOfficeBox")
-      ->validateWithRe(
-          x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
-          "must be at most 70 characters long"
-        ),
+          "street must be at most 70 characters long"
+        )
+      ->concatResult(
+          data
+          ->valueFromJsonEntry("creditorStreetNumber")
+          ->validateWithAddressType(
+              creditorAddressTypeResult,
+              validateWithRexp(_,
+                x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
+                "street number must be at most 16 characters long for structured address values"
+              ),
+              validateWithRexp(_,
+                x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0}$/")),
+                "street number must be empty for combined address values"
+              )
+            )
+        )
+      ->validateWithPostOfficeBox(creditorPostOfficeBoxResult)
+      ->entryKey("creditorAddressLine1"),
 
       data
       ->valueFromJsonEntry("creditorPostalCode")
-      ->validateWithRe(
-          x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
-          "must be at most 16 characters long"
-        ),
-
-      data
-      ->valueFromJsonEntry("creditorLocality")
-      ->validateWithRe(
-          x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{1,35}$/")),
-          "must not be empty and at most 35 characters long"
-        ),
+      ->validateWithAddressType(
+          creditorAddressTypeResult,
+          validateWithRexp(_,
+            x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
+            "postal code must be at most 16 characters long for structured address values"
+          ),
+          validateWithRexp(_,
+            x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0}$/")),
+            "postal code must be empty for combined address values"
+          )
+        )
+      ->concatResult(
+          data
+          ->valueFromJsonEntry("creditorLocality")
+          ->validateWithRexp(
+              x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{1,35}$/")),
+              "locality must not be empty and at most 35 characters long"
+            )
+        )
+      ->entryKey("creditorAddressLine2"),
 
       data
       ->valueFromJsonEntry("creditorCountryCode")
-      ->validateWithRe(
+      ->validateWithRexp(
           x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^\S{2}$/")),
           "must be 2 characters long"
         ),
 
       data
-      ->valueFromJsonEntry("debtorAddressType")
-      ->validateWithRe(
-          x => Js.String2.trim(x)->Js.String2.match_(%re("/^(K|S){1}$/")),
-          "must be either K or S"
-        ),
-
-      data
       ->valueFromJsonEntry("debtorName")
-      ->validateWithRe(
+      ->validateWithRexp(
           x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{1,70}$/")),
           "must not be empty and at most 70 characters long"
         ),
 
       data
-      ->valueFromJsonEntry("debtorStreetNumber")
-      ->validateWithRe(
-          x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
-          "must be at most 16 characters long"
-        ),
-
-      data
       ->valueFromJsonEntry("debtorStreet")
-      ->validateWithRe(
+      ->validateWithRexp(
           x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
-          "must be at most 70 characters long"
-        ),
-
-      data
-      ->valueFromJsonEntry("debtorPostOfficeBox")
-      ->validateWithRe(
-          x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
-          "must be at most 70 characters long"
-        ),
+          "street must be at most 70 characters long"
+        )
+      ->concatResult(
+          data
+          ->valueFromJsonEntry("debtorStreetNumber")
+          ->validateWithAddressType(
+              debtorAddressTypeResult,
+              validateWithRexp(_,
+                x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
+                "street number must be at most 16 characters long for structured address values"
+              ),
+              validateWithRexp(_,
+                x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0}$/")),
+                "street number must be empty for combined address values"
+              )
+            )
+        )
+      ->validateWithPostOfficeBox(debtorPostOfficeBoxResult)
+      ->entryKey("debtorAddressLine1"),
 
       data
       ->valueFromJsonEntry("debtorPostalCode")
-      ->validateWithRe(
-          x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
-          "must be at most 16 characters long"
-        ),
-
-      data
-      ->valueFromJsonEntry("debtorLocality")
-      ->validateWithRe(
-          x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{1,35}$/")),
-          "must not be empty and at most 35 characters long"
-        ),
+      ->validateWithAddressType(
+          debtorAddressTypeResult,
+          validateWithRexp(_,
+            x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
+            "postal code must be at most 16 characters long for structured address values"
+          ),
+          validateWithRexp(_,
+            x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0}$/")),
+            "postal code must be empty for combined address values"
+          )
+        )
+      ->concatResult(
+          data
+          ->valueFromJsonEntry("debtorLocality")
+          ->validateWithRexp(
+              x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{1,35}$/")),
+              "locality must not be empty and at most 35 characters long"
+            )
+        )
+      ->entryKey("debtorAddressLine2"),
 
       data
       ->valueFromJsonEntry("debtorCountryCode")
-      ->validateWithRe(
+      ->validateWithRexp(
           x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^\S{2}$/")),
           "must be 2 characters long"
         )
