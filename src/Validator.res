@@ -572,8 +572,6 @@ let validateEntries: array<jsonEntry> => array<entry> =
         )
     ]
 
-
-
     let errors = 
       Js.Array2.filter(results, 
         x => 
@@ -583,8 +581,6 @@ let validateEntries: array<jsonEntry> => array<entry> =
         }
       )
 
-
-
     Js.Array2.forEach(errors,
       x =>
       switch x {
@@ -592,8 +588,6 @@ let validateEntries: array<jsonEntry> => array<entry> =
       | Error(err) => Js.log(err.key++ " " ++Js.Array2.joinWith(err.msg, " and "))
       }
     )
-
-
 
     Js.Array2.map(results, entryFromValidationResult)
   }

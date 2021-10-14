@@ -13,8 +13,9 @@ let valueFromEntry: Js.Dict.t<string> => string => string =
 
 
 let stringFromEntries: array<entry> => string =
-  entries => {
-    let data = Js.Dict.fromArray(entries)
+  entries =>
+  Js.Dict.fromArray(entries)
+  ->data =>
     [
       // header
       "SPC",
@@ -64,5 +65,5 @@ let stringFromEntries: array<entry> => string =
       "",
       ""
     ]
-    ->Js.Array2.joinWith("\n")
-  }
+  ->Js.Array2.joinWith("\n")
+
