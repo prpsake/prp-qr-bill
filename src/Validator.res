@@ -165,6 +165,20 @@ let validateWithRexp: validationResult<'a> => (string => option<array<string>>) 
 
 
 
+let validateWithPred: validationResult<'a> => (string => bool) => string => validationResult<'a> =
+  result =>
+  fn =>
+  errMsg =>
+  switch result {
+  | Ok({key, val}) =>
+    fn(val) ?
+    Ok({key, val}) :
+    Error({key, val, msg: [errMsg], display: "" })
+  | Error(err) => Error(err)
+  }
+
+
+
 // let errorDisplay: validationResult<'a> => string => validationResult<'a> =
 //   result =>
 //   display =>
@@ -411,12 +425,13 @@ let validateEntries: array<jsonEntry> => array<entry> =
 
       data
       ->valueFromJsonEntry("amount")
-      ->validateWithRexp(
+      ->validateWithPred(
           x => 
           Formatter.removeWhitespace(x)
           ->Js.Float.fromString
           ->Js.Float.toFixedWithPrecision(~digits=2)
-          ->Js.String2.match_(%re("/^([1-9]{1}[0-9]{0,8}\.[0-9]{2}|0\.[0-9]{1}[1-9]{1})$/")),
+          ->Js.Float.fromString
+          ->x => x >= 0.01 && x <= 999999999.99,
           "must be a number ranging from 0.01 to 999999999.99"
         ),
 

@@ -126,7 +126,7 @@ let moneyFromNumberStr: int => string => string =
         ->reverseStr
         ->blockStr3
         ->reverseStr
-        ++" "
+        ++"."
         ++units[1]
       | _ => ""
       }

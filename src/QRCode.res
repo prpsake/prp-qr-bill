@@ -43,6 +43,10 @@ let stringFromEntries: array<entry> => string =
       "",
       "",
 
+      // payment amount information
+      data->valueFromEntry("amount"),
+      data->valueFromEntry("currency"),
+
       // ultimate debtor
       "K",
       data->valueFromEntry("debtorName"),
