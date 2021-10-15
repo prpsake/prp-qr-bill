@@ -71,7 +71,7 @@ const AQRBill = {
   lang: property(translate),
 
   currency: '',
-  amount: property(Formatter.moneyFromScaledIntStr2),
+  amount: property(Formatter.moneyFromNumberStr2),
   iban: property(Formatter.blockStr4),
   referenceType: '',
   reference: property(Formatter.referenceBlockStr),

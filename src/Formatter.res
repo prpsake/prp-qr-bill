@@ -3,7 +3,7 @@
 `removeWhitespace(x)` 
 
 Takes string `x` and returns a string from `x` without whitespace.
-Returns an emtpy string if `x` is not a string.
+Returns an empty string if `x` is not a string.
 
 */
 let removeWhitespace: string => string =
@@ -36,7 +36,7 @@ let reverseStr: string => string =
 
 Takes integer `n`, string `x` and returns a string from `x` grouped in 
 character-blocks of maximal length `n` seperated by spaces.
-Returns an emtpy string if `x` is not a string.
+Returns an empty string if `x` is not a string.
 
 Examples: 
 - n = 3, x = "123456789" ->"123 456 789"
@@ -71,7 +71,7 @@ referenceBlockStr(x)
 Takes string `x`, if `x` starts with "RF", returns a string from `x` in 
 the Creditor Reference format (CROOKS 11649), else returns a string from `x` 
 in the QR-Reference format.
-Returns an emtpy string if `x` is not a string.
+Returns an empty string if `x` is not a string.
 
 Examples:
 - x = "RF18539007547034" ->"RF18 5390 0754 7034"
@@ -83,13 +83,11 @@ let referenceBlockStr: string => string =
   switch Js.Types.classify(x) {
   | JSString(x) =>
     let xTrim = Js.String2.trim(x)
-    switch Js.String2.startsWith(xTrim, "RF") {
-    | true => blockStr4(xTrim)
-    | false => 
-      let head = Js.String2.substring(xTrim, ~from=0, ~to_=2)
-      let tail = blockStr5(Js.String2.substringToEnd(xTrim, ~from=2))
-      head++ " " ++tail
-    }
+    Js.String2.startsWith(xTrim, "RF") ?
+    blockStr4(xTrim) :
+    Js.String2.substring(xTrim, ~from=0, ~to_=2)
+    ++" "
+    ++blockStr5(Js.String2.substringToEnd(xTrim, ~from=2))
   | _ => ""
   }
 
@@ -99,26 +97,42 @@ let referenceBlockStr: string => string =
 
 moneyFromScaledIntStr(n, x)
 
-Takes integer `n`, string `x` and returns a string from `x`... TODO
-Returns an emtpy string if `x` is not a string.
+Takes integer `n`, string `x` and returns a float string from `x` with
+precision `n`, where wholes are grouped in 3-character-blocks.
+Returns an empty string if `x` is not a string or not parsable to float.
 
 */
-let moneyFromScaledIntStr: int => string => string =
+let moneyFromNumberStr: int => string => string =
   n =>
   x =>
   switch Js.Types.classify(x) {
   | JSString(x) =>
-    let xTrim = Js.String2.trim(x)
-    xTrim
-    ->Js.String2.slice(~from=0, ~to_=-n)
-    ->reverseStr
-    ->blockStr3
-    ->reverseStr
-    ++ "." 
-    ++ Js.String2.sliceToEnd(xTrim, ~from=-n)
+    removeWhitespace(x)
+    ->Js.Float.fromString
+    ->Js.Float.toFixedWithPrecision(~digits=n)
+    ->Js.String2.split(".")
+    ->units =>
+      switch Js.Array2.length(units) {
+      | 0 => ""
+      | 1 => 
+        units[0]
+        ->reverseStr
+        ->blockStr3
+        ->reverseStr
+        ++"."
+        ++Js.String2.repeat("0", n)
+      | 2 =>
+        units[0]
+        ->reverseStr
+        ->blockStr3
+        ->reverseStr
+        ++" "
+        ++units[1]
+      | _ => ""
+      }
   | _ => ""
   }
 
 
 
-let moneyFromScaledIntStr2 = moneyFromScaledIntStr(2)
+let moneyFromNumberStr2 = moneyFromNumberStr(2)
