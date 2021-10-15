@@ -107,12 +107,10 @@ const AQRBill = {
     creditorName,
     creditorAddressLine1,
     creditorAddressLine2,
-    //creditorCountryCode,
 
     debtorName,
     debtorAddressLine1,
     debtorAddressLine2,
-    //debtorCountryCode,
 
     showReference,
     showAdditionalInfo,
