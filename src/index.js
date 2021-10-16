@@ -1,6 +1,5 @@
 /*
   NB:
-
   Some possible versions:
   1: QR-IBAN (CHXX 3XXX ...)
      + 
@@ -15,7 +14,6 @@
 
 
   Links:
-
   https://www.paymentstandards.ch/dam/downloads/style-guide-en.pdf
   https://www.paymentstandards.ch/de/shared/communication-grid.html
   https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-de.pdf
@@ -29,8 +27,9 @@ import { setBoolFromVersions } from './Factories.js'
 import { translate } from './Translations.bs.js'
 import * as Parser from './Parser.bs.js'
 import * as Validator from './Validator.bs.js'
-import * as QRCode from './QRCode.bs.js'
 import * as Formatter from './Formatter.bs.js'
+import * as QRCode from './QRCode.bs.js'
+import { QRCode as QRCodeSVG } from './qrcode-svg.js'
 
 
 
@@ -58,12 +57,28 @@ const blankField =
   `
 
 
+const qrCode =
+  content =>
+  new QRCodeSVG({
+    content,
+    padding: 0,
+    width: 512,
+    height: 512,
+    color: "#000000",
+    background: "#ffffff",
+    ecl: "M",
+    join: true,
+    xmlDeclaration: false,
+    container: "svg-viewbox"
+  }).svg()
+
+  
+
 const AQRBill = {
   tag: 'a-qr-bill',
   data: property(Parser.parseJson, (host, key) => {
     const entries = Validator.validateEntries(host[key])
-    const qrString = QRCode.stringFromEntries(entries)
-    console.log(qrString)
+    host.qrCodeString = QRCode.stringFromEntries(entries)
     entries.forEach(([k, v]) => host[k] = v)
   }),
 
@@ -87,6 +102,8 @@ const AQRBill = {
   debtorAddressLine1: '',
   debtorAddressLine2: '',
   debtorCountryCode: '',
+
+  qrCodeString: '',
 
   showReference: setBoolFromVersions(['1a', '1b', '2a', '2b']),
   showAdditionalInfo: setBoolFromVersions(['1a', '1b', '2a', '2b']),
@@ -115,6 +132,8 @@ const AQRBill = {
     showReference,
     showAdditionalInfo,
     showBlanks,
+
+    qrCodeString,
 
     reduceContent
 
@@ -174,7 +193,8 @@ const AQRBill = {
       <div class="w-51">
         <div class="h-7 font-bold text-11 leading-none">${lang.paymentPartTitle}</div>
 
-        <div class="h-56 py-5 pr-5"></div>
+        <div class="h-56 py-5 pr-5" innerHTML=${qrCode(qrCodeString)}>
+        </div>
 
         ${showBlanks ? html`
           <div class="h-22">

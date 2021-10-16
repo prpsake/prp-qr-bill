@@ -1,3 +1,11 @@
+
+/*
+
+Links:
+https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-en.pdf#page=39
+
+*/
+
 type entry = (string, string)
 
 

@@ -2,7 +2,6 @@
 
 Links:
 https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-en.pdf#page=28
-https://regex101.com/
 
 */
 
