@@ -12,3 +12,8 @@ package-lock.json -linguist-detectable
 # tests
 
 *.spec.js -linguist-detectable
+
+
+
+# vendor
+src/qrcode-svg.js -linguist-detectable
