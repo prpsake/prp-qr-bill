@@ -33,6 +33,7 @@ module.exports = {
     'borderColor',
     'borderWidth',
     'borderStyle',
+    'fill',
     'stroke',
     'textAlign',
     'fontFamily',
@@ -64,6 +65,9 @@ module.exports = {
     },
     borderStyle: {
       solid: 'solid',
+    },
+    fill: {
+      current: 'currentColor',
     },
     stroke: {
       current: 'currentColor',

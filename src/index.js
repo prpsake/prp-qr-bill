@@ -57,26 +57,36 @@ const svgBlankField =
   </svg>`
 
 
+
 const svgQRCode = 
   content => 
   html`
   <svg 
     width="100%"
     height="100%"
-    viewBox="0 0 512 512"
+    viewBox="0 0 570 570"
     class="block text-black fill-current">
     <path 
-      x="0" y="0" 
+      x="0" y="0"
       shape-rendering="crispEdges"
-      d=${new QRCodeSVG({
+      d="${new QRCodeSVG({
         content,
         ecl: "M",
-        width: 512,
-        height: 512,
+        width: 570,
+        height: 570,
         padding: 0
-      }).svgPathData()} />
+      }).svgPathData()}"/> 
+    <rect 
+      x="245" y="245" 
+      width="80" 
+      height="80"/>
+    <path
+      fill="#fff"
+      fill-rule="evenodd" 
+      d="M328.37,241.63L241.63,241.63L241.63,328.37L328.37,328.37L328.37,241.63ZM325.069,244.931L244.931,244.931L244.931,325.069L325.069,325.069L325.069,244.931ZM293.014,275.572L293.014,257.187L277.458,257.187L277.458,275.572L259.073,275.572L259.073,291.128L277.458,291.128L277.458,309.041L293.014,309.041L293.014,291.128L310.927,291.128L310.927,275.572L293.014,275.572Z"/>
   </svg>`
-  
+
+
 
 const AQRBill = {
   tag: 'a-qr-bill',
