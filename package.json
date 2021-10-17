@@ -1,14 +1,14 @@
 {
   "name": "prp-qr-bill",
   "version": "0.1.0",
-  "description": "SVG QR-Bill using hybrids.js",
+  "description": "HTML QR-Bill using hybrids.js",
   "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/prpsake/prp-qr-bill.git"
   },
   "keywords": [
-    "SVG",
+    "HTML",
     "QR-Bill",
     "hybrids.js"
   ],
