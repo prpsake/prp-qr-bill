@@ -1194,6 +1194,40 @@ QRCode.prototype.svg = function(opt) {
 };
 
 
+QRCode.prototype.svgPathData = function () {
+  var options = this.options || {};
+  var modules = this.qrcode.modules;
+
+  var width = options.width;
+  var height = options.height;
+  var length = modules.length;
+  var xsize = width / (length + 2 * options.padding);
+  var ysize = height / (length + 2 * options.padding);
+
+  var pathdata = '';
+
+  for (var y = 0; y < length; y++) {
+    for (var x = 0; x < length; x++) {
+      if (!modules[x][y]) continue
+
+      var px = (x * xsize + options.padding * xsize);
+      var py = (y * ysize + options.padding * ysize);
+
+      var w = xsize + px
+      var h = ysize + py
+
+      px = (Number.isInteger(px)) ? Number(px) : px.toFixed(2);
+      py = (Number.isInteger(py)) ? Number(py) : py.toFixed(2);
+      w = (Number.isInteger(w)) ? Number(w) : w.toFixed(2);
+      h = (Number.isInteger(h)) ? Number(h) : h.toFixed(2);
+
+      pathdata += ('M' + px + ',' + py + ' V' + h + ' H' + w + ' V' + py + ' H' + px + ' Z ');
+    }
+  }
+
+  return pathdata;
+}
+
 export {
   QRCode
 }

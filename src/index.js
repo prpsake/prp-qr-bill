@@ -38,47 +38,51 @@ import { QRCode as QRCodeSVG } from './qrcode-svg.js'
    Style-guide states 0.75pt which is 0.2635 or so, but looks
    too thin compared to the example in the guide.
 */
-const blankField = 
-  (width, height, styles = {}) => html`
-    <svg 
-      viewBox="0 0 ${width} ${height}"
-      fill="none"
-      class="block text-black stroke-current"
-      style=${{
-        width: `${width}mm`,
-        height: `${height}mm`,
-        ...styles
-      }}>
-      <path d="M 3,0 h -3 v 3" stroke-width="0.5"/>
-      <path d="M ${width - 3},0 h 3 v 3" stroke-width="0.5"/>
-      <path d="M 3,${height} h -3 v -3" stroke-width="0.5"/>
-      <path d="M ${width - 3},${height} h 3 v -3" stroke-width="0.5"/>
-    </svg>
-  `
+const svgBlankField = 
+  (width, height, styles = {}) => 
+  html`
+  <svg 
+    viewBox="0 0 ${width} ${height}"
+    fill="none"
+    class="block text-black stroke-current"
+    style=${{
+      width: `${width}mm`,
+      height: `${height}mm`,
+      ...styles
+    }}>
+    <path d="M 3,0 h -3 v 3" stroke-width="0.5"/>
+    <path d="M ${width - 3},0 h 3 v 3" stroke-width="0.5"/>
+    <path d="M 3,${height} h -3 v -3" stroke-width="0.5"/>
+    <path d="M ${width - 3},${height} h 3 v -3" stroke-width="0.5"/>
+  </svg>`
 
 
-const qrCode =
-  content =>
-  new QRCodeSVG({
-    content,
-    padding: 0,
-    width: 512,
-    height: 512,
-    color: "#000000",
-    background: "#ffffff",
-    ecl: "M",
-    join: true,
-    xmlDeclaration: false,
-    container: "svg-viewbox"
-  }).svg()
-
+const svgQRCode = 
+  content => 
+  html`
+  <svg 
+    width="100%"
+    height="100%"
+    viewBox="0 0 512 512"
+    class="block text-black fill-current">
+    <path 
+      x="0" y="0" 
+      shape-rendering="crispEdges"
+      d=${new QRCodeSVG({
+        content,
+        ecl: "M",
+        width: 512,
+        height: 512,
+        padding: 0
+      }).svgPathData()} />
+  </svg>`
   
 
 const AQRBill = {
   tag: 'a-qr-bill',
   data: property(Parser.parseJson, (host, key) => {
     const entries = Validator.validateEntries(host[key])
-    host.qrCodeString = QRCode.stringFromEntries(entries)
+    host.qrCodeContent = QRCode.stringFromEntries(entries)
     entries.forEach(([k, v]) => host[k] = v)
   }),
 
@@ -103,7 +107,7 @@ const AQRBill = {
   debtorAddressLine2: '',
   debtorCountryCode: '',
 
-  qrCodeString: '',
+  qrCodeContent: '',
 
   showReference: setBoolFromVersions(['1a', '1b', '2a', '2b']),
   showAdditionalInfo: setBoolFromVersions(['1a', '1b', '2a', '2b']),
@@ -133,7 +137,7 @@ const AQRBill = {
     showAdditionalInfo,
     showBlanks,
 
-    qrCodeString,
+    qrCodeContent,
 
     reduceContent
 
@@ -162,7 +166,7 @@ const AQRBill = {
       <div class="font-bold text-6 leading-9">
         ${showBlanks ? lang.debtorFieldHeading : lang.debtorHeading}
       </div>
-      ${showBlanks ? blankField(52, 20, { marginTop: '.8pt' }) : html`
+      ${showBlanks ? svgBlankField(52, 20, { marginTop: '.8pt' }) : html`
         <div class="text-8 leading-9">
           <div>${debtorName}</div>
           ${!reduceContent && html`<div>${debtorAddressLine1}</div>`}
@@ -179,7 +183,7 @@ const AQRBill = {
 
       <div class=${{ 'flex-grow': true, flex: showBlanks }}>
         <div class="font-bold text-6 leading-9">${lang.amountHeading}</div>
-        ${showBlanks ? blankField(30, 10, { marginTop: '2pt', marginLeft: '4pt' }) : html`
+        ${showBlanks ? svgBlankField(30, 10, { marginTop: '2pt', marginLeft: '4pt' }) : html`
           <div class="text-8 leading-9">${amount}</div>
         `}
       </div>
@@ -193,7 +197,8 @@ const AQRBill = {
       <div class="w-51">
         <div class="h-7 font-bold text-11 leading-none">${lang.paymentPartTitle}</div>
 
-        <div class="h-56 py-5 pr-5" innerHTML=${qrCode(qrCodeString)}>
+        <div class="h-56 py-5 pr-5">
+          ${svgQRCode(qrCodeContent)}
         </div>
 
         ${showBlanks ? html`
@@ -204,7 +209,7 @@ const AQRBill = {
             </div>
             <div class="flex">
               <div class="text-10 leading-11 mr-line-9">${currency}</div>
-              ${blankField(40, 15, { marginTop: '1.6pt' })}
+              ${svgBlankField(40, 15, { marginTop: '1.6pt' })}
             </div>
           </div>
         ` : html`
@@ -249,7 +254,7 @@ const AQRBill = {
         <div class="font-bold text-8 leading-11">
           ${showBlanks ? lang.debtorFieldHeading : lang.debtorHeading}
         </div>
-        ${showBlanks ? blankField(65, 25, { marginTop: '1.1pt' }) : html`
+        ${showBlanks ? svgBlankField(65, 25, { marginTop: '1.1pt' }) : html`
           <div class="text-10 leading-11">
             <div>${debtorName}</div>
             ${!reduceContent && html`<div>${debtorAddressLine1}</div>`}
