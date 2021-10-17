@@ -39,6 +39,7 @@ type validationResult<'a> =
 `mod97FromString(str)`
 
 Gratefully taken from https://github.com/arhs/iban.js/blob/master/iban.js#L71
+TODO: simplify
 
 */
 let mod97FromString: string => int =
@@ -70,6 +71,7 @@ let mod97FromString: string => int =
 
 Gratefully taken from https://www.hosang.ch/modulo10.aspx via
 https://github.com/NicolasZanotti/esr-code-line/blob/master/src/index.ts#L10
+TODO: simplify
 
 */
 let mod10FromIntString: string => string =

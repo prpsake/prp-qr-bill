@@ -227,7 +227,7 @@ const AQRBill = {
         <div class="text-10 leading-11 mb-line-11">
           <div>${iban}</div>
           <div>${creditorName}</div>
-          ${!reduceContent && html`<div>${creditorAddressLine1}</div>`}
+          <div>${creditorAddressLine1}</div>
           <div>${creditorAddressLine2}</div>
         </div>
 
@@ -252,7 +252,7 @@ const AQRBill = {
         ${showBlanks ? svgBlankField(65, 25, { marginTop: '1.1pt' }) : html`
           <div class="text-10 leading-11">
             <div>${debtorName}</div>
-            ${!reduceContent && html`<div>${debtorAddressLine1}</div>`}
+            <div>${debtorAddressLine1}</div>
             <div>${debtorAddressLine2}</div>
           </div>
         `}

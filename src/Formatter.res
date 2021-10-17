@@ -61,6 +61,11 @@ let blockStr: int => string => string =
 let blockStr3 = blockStr(3)
 let blockStr4 = blockStr(4)
 let blockStr5 = blockStr(5)
+let blockStrRight3: string => string =
+  x =>
+  reverseStr(x)
+  ->blockStr3
+  ->reverseStr
 
 
 
@@ -95,10 +100,10 @@ let referenceBlockStr: string => string =
 
 /**
 
-moneyFromScaledIntStr(n, x)
+moneyFromNumberStr(n, x)
 
 Takes integer `n`, string `x` and returns a float string from `x` with
-precision `n`, where wholes are grouped in 3-character-blocks.
+precision `n`, where wholes are grouped in 3-character-blocks from the right.
 Returns an empty string if `x` is not a string or not parsable to float.
 
 */
@@ -113,21 +118,8 @@ let moneyFromNumberStr: int => string => string =
     ->Js.String2.split(".")
     ->units =>
       switch Js.Array2.length(units) {
-      | 0 => ""
-      | 1 => 
-        units[0]
-        ->reverseStr
-        ->blockStr3
-        ->reverseStr
-        ++"."
-        ++Js.String2.repeat("0", n)
-      | 2 =>
-        units[0]
-        ->reverseStr
-        ->blockStr3
-        ->reverseStr
-        ++"."
-        ++units[1]
+      | 1 => blockStrRight3(units[0])++ "." ++Js.String2.repeat("0", n)
+      | 2 => blockStrRight3(units[0])++ "." ++units[1]
       | _ => ""
       }
   | _ => ""
