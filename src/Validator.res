@@ -249,7 +249,7 @@ let validateSCOR: validationSuccess => validationResult<'a> =
   Ok({key, val}) //TODO: missing actual validation
   ->validateWithRexp(
       x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^[\S]{5,25}$/")),
-      "must be 27 characters long"
+      "must be 5 to 25 characters long"
     )
 
 
@@ -365,6 +365,7 @@ let validateEntries: array<jsonEntry> => array<entry> =
   entries => {
     let data = Js.Dict.fromArray(entries)
 
+    // validate dependencies
     let referenceTypeResult =
       data
       ->valueFromJsonEntry("referenceType")
@@ -405,7 +406,8 @@ let validateEntries: array<jsonEntry> => array<entry> =
           "must be at most 70 characters long"
         )
 
-    let results = [
+    // log errors and return results
+    [
       referenceTypeResult,
 
       data
@@ -585,23 +587,14 @@ let validateEntries: array<jsonEntry> => array<entry> =
           "must be 2 characters long"
         )
     ]
-
-    let errors = 
-      Js.Array2.filter(results, 
-        x => 
+    ->Js.Array2.map(
+        x =>
         switch x {
-        | Ok(_) => false
-        | Error(_) => true
+        | Ok(_) => x
+        | Error(err) =>
+          Js.log(err.key++ " " ++Js.Array2.joinWith(err.msg, " and "))
+          x
         }
+        ->entryFromValidationResult
       )
-
-    Js.Array2.forEach(errors,
-      x =>
-      switch x {
-      | Ok(_) => ()
-      | Error(err) => Js.log(err.key++ " " ++Js.Array2.joinWith(err.msg, " and "))
-      }
-    )
-
-    Js.Array2.map(results, entryFromValidationResult)
   }
