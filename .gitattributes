@@ -16,4 +16,4 @@ package-lock.json -linguist-detectable
 
 
 # vendor
-src/qrcode-svg.js -linguist-detectable
+src/vendor/* -linguist-detectable

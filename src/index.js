@@ -1,25 +1,11 @@
 /*
-  NB:
-  Some possible versions:
-  1: QR-IBAN (CHXX 3XXX ...)
-     + 
-     QR reference (XX XXXXX XXXXX ...)
-
-  2: IBAN (CHXX XXXX ...)
-     +
-     Creditor reference (RFXX XXXX ...)
-
-  3: IBAN
-     w/o reference
-
 
   Links:
   https://www.paymentstandards.ch/dam/downloads/style-guide-en.pdf
   https://www.paymentstandards.ch/de/shared/communication-grid.html
   https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-de.pdf
-  - Datatypes: page 27
+  - Datatypes: https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-de.pdf#page=27
 */
-
 
 import styles from './index.a.css'
 import { define, html, property } from 'hybrids'
@@ -29,7 +15,6 @@ import * as Parser from './Parser.bs.js'
 import * as Validator from './Validator.bs.js'
 import * as Formatter from './Formatter.bs.js'
 import * as QRCode from './QRCode.bs.js'
-import { QRCode as QRCodeSVG } from './qrcode-svg.js'
 
 
 
@@ -59,7 +44,7 @@ const svgBlankField =
 
 
 const svgQRCode = 
-  content => 
+  str => 
   html`
   <svg 
     width="100%"
@@ -69,20 +54,20 @@ const svgQRCode =
     <path 
       x="0" y="0"
       shape-rendering="crispEdges"
-      d="${new QRCodeSVG({
-        content,
+      d="${QRCode.pathDataFromString(str, {
         ecl: "M",
         width: 570,
         height: 570,
         padding: 0
-      }).svgPathData()}"/> 
+      })}"/> 
     <rect 
       x="245" y="245" 
       width="80" 
       height="80"/>
     <path
       fill="#fff"
-      fill-rule="evenodd" 
+      fill-rule="evenodd"
+      shape-rendering="crispEdges"
       d="M328.37,241.63L241.63,241.63L241.63,328.37L328.37,328.37L328.37,241.63ZM325.069,244.931L244.931,244.931L244.931,325.069L325.069,325.069L325.069,244.931ZM293.014,275.572L293.014,257.187L277.458,257.187L277.458,275.572L259.073,275.572L259.073,291.128L277.458,291.128L277.458,309.041L293.014,309.041L293.014,291.128L310.927,291.128L310.927,275.572L293.014,275.572Z"/>
   </svg>`
 
@@ -92,7 +77,7 @@ const AQRBill = {
   tag: 'a-qr-bill',
   data: property(Parser.parseJson, (host, key) => {
     const entries = Validator.validateEntries(host[key])
-    host.qrCodeContent = QRCode.stringFromEntries(entries)
+    host.qrCodeString = QRCode.stringFromEntries(entries)
     entries.forEach(([k, v]) => host[k] = v)
   }),
 
@@ -117,7 +102,7 @@ const AQRBill = {
   debtorAddressLine2: '',
   debtorCountryCode: '',
 
-  qrCodeContent: '',
+  qrCodeString: '',
 
   showReference: setBoolFromVersions(['1a', '1b', '2a', '2b']),
   showAdditionalInfo: setBoolFromVersions(['1a', '1b', '2a', '2b']),
@@ -147,7 +132,7 @@ const AQRBill = {
     showAdditionalInfo,
     showBlanks,
 
-    qrCodeContent,
+    qrCodeString,
 
     reduceContent
 
@@ -208,7 +193,7 @@ const AQRBill = {
         <div class="h-7 font-bold text-11 leading-none">${lang.paymentPartTitle}</div>
 
         <div class="h-56 py-5 pr-5">
-          ${svgQRCode(qrCodeContent)}
+          ${svgQRCode(qrCodeString)}
         </div>
 
         ${showBlanks ? html`

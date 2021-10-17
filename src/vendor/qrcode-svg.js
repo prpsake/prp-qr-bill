@@ -1194,7 +1194,7 @@ QRCode.prototype.svg = function(opt) {
 };
 
 
-QRCode.prototype.svgPathData = function () {
+QRCode.prototype.pathData = function () {
   var options = this.options || {};
   var modules = this.qrcode.modules;
 
