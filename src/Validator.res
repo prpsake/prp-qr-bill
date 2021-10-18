@@ -226,23 +226,25 @@ let validateIban: validationResult<'a> => validationResult<'a> =
 
 
 let validateQRR: validationSuccess => validationResult<'a> =
-  ({key, val}) =>
-  mod10FromIntString(val)
-  ->a => {
-      let b = Js.String2.sliceToEnd(val, ~from=26)
-      a == b ?
-      Ok({key, val}) :
-      Error({
-        key,
-        val,
-        msg: ["fails on the check digit: expected" ++b++ " but got " ++a],
-        display: ""
-      })
-    }
-  ->validateWithRexp(
-      x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^[\S]{27}$/")),
-      "must be 27 characters long"
-    )
+  ({key, val}) => {
+    let valTrim = Formatter.removeWhitespace(val)
+    mod10FromIntString(valTrim)
+    ->a => {
+        let b = Js.String2.sliceToEnd(valTrim, ~from=26)
+        a == b ?
+        Ok({key, val: valTrim}) :
+        Error({
+          key,
+          val: valTrim,
+          msg: ["fails on the check digit: expected" ++b++ " but got " ++a],
+          display: ""
+        })
+      }
+    ->validateWithRexp(
+        x => Js.String2.match_(x, %re("/^\S{27}$/")),
+        "must be 27 characters long"
+      )
+  }
 
 
 
@@ -250,7 +252,7 @@ let validateSCOR: validationSuccess => validationResult<'a> =
   ({key, val}) =>
   Ok({key, val}) //TODO: missing actual validation
   ->validateWithRexp(
-      x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^[\S]{5,25}$/")),
+      x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^\S{5,25}$/")),
       "must be 5 to 25 characters long"
     )
 
