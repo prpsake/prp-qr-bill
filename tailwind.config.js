@@ -65,6 +65,8 @@ module.exports = {
     },
     borderStyle: {
       solid: 'solid',
+      dashed: 'dashed',
+      dotted: 'dotted'
     },
     fill: {
       current: 'currentColor',

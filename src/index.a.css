@@ -15,4 +15,17 @@
 }
 
 
-/* @layer utilities {} */
+@layer utilities {
+  .scissors-right {
+    position: relative;
+  }
+
+  .scissors-right:before {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    content: "\2703";
+    transform: translate(3pt, 12pt) rotate(84deg);
+  }
+}
