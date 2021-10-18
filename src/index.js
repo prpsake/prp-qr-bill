@@ -138,7 +138,7 @@ const AQRBill = {
 
   }) => html`
 
-  <div class="w-62 p-5 border-r border-dashed scissors-right">
+  <div class="w-62 p-5 border-t border-r border-dashed border-black scissors-br">
 
     <div class="h-7 font-bold text-11 leading-none">${lang.receiptTitle}</div>
 
@@ -187,7 +187,7 @@ const AQRBill = {
     <div class="h-18 font-bold text-6 text-right">${lang.acceptancePointHeading}</div>
   </div>
 
-  <div class="w-148 p-5">
+  <div class="w-148 p-5 border-t border-dashed border-black scissors-tr">
     <div class="h-85 flex">
       <div class="w-51">
         <div class="h-7 font-bold text-11 leading-none">${lang.paymentPartTitle}</div>
