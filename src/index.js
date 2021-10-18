@@ -9,7 +9,7 @@
 
 import styles from './index.a.css'
 import { define, html, property } from 'hybrids'
-import { setBoolFromVersions } from './Factories.js'
+import { showWith } from './Factories.js'
 import { translate } from './Translations.bs.js'
 import * as Parser from './Parser.bs.js'
 import * as Validator from './Validator.bs.js'
@@ -104,9 +104,9 @@ const AQRBill = {
 
   qrCodeString: '',
 
-  showReference: setBoolFromVersions(['1a', '1b', '2a', '2b']),
-  showAdditionalInfo: setBoolFromVersions(['1a', '1b', '2a', '2b']),
-  showBlanks: setBoolFromVersions(['3b']),
+  showReference: showWith('referenceType', ['QRR', 'SCOR']),
+  showAdditionalInfo: showWith('version', ['1a', '1b', '2a', '2b']),
+  showBlanks: showWith('version', ['3b']),
 
   reduceContent: false,
 
@@ -151,7 +151,7 @@ const AQRBill = {
         <div>${creditorAddressLine2}</div>
       </div>
 
-      ${showReference && reference && html`
+      ${showReference && html`
         <div class="font-bold text-6 leading-9">${lang.referenceHeading}</div>
         <div class="text-8 leading-9 mb-line-9">
           <div>${reference}</div>
@@ -231,7 +231,7 @@ const AQRBill = {
           <div>${creditorAddressLine2}</div>
         </div>
 
-        ${showReference && reference && html`
+        ${showReference && html`
           <div class="font-bold text-8 leading-11">${lang.referenceHeading}</div>
           <div class="text-10 leading-11 mb-line-11">
             <div>${reference}</div>

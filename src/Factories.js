@@ -1,11 +1,11 @@
-const setBoolFromVersions =
-  versions =>
+const showWith =
+  (otherKey, values) =>
   ({
     connect: (host, key) => {
-      host[key] = versions.some(x => x === host.version)
+      host[key] = values.some(x => x === host[otherKey])
     }
   })
 
 
 
-export { setBoolFromVersions }
+export { showWith }

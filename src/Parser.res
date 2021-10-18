@@ -159,7 +159,12 @@ let addressEntriesFromData: Js.Dict.t<Js.Json.t> => string => array<jsonEntry> =
 let parseJson: string => array<jsonEntry> =
   str =>
   try {
-    let json = Js.Json.parseExn(str)
+    let json =
+      switch Js.Json.stringifyAny(str) {
+      | Some(x) => x
+      | None => ""
+      }
+      ->Js.Json.parseExn
     switch Js.Json.classify(json) {
     | JSONObject(data) =>
       rootEntriesFromData(data)
