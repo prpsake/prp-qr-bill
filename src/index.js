@@ -29,16 +29,33 @@ const svgBlankField =
   <svg 
     viewBox="0 0 ${width} ${height}"
     fill="none"
+    overflow="visible"
     class="block text-black stroke-current"
     style=${{
       width: `${width}mm`,
       height: `${height}mm`,
       ...styles
     }}>
-    <path d="M 3,0 h -3 v 3" stroke-width="0.5"/>
-    <path d="M ${width - 3},0 h 3 v 3" stroke-width="0.5"/>
-    <path d="M 3,${height} h -3 v -3" stroke-width="0.5"/>
-    <path d="M ${width - 3},${height} h 3 v -3" stroke-width="0.5"/>
+    <path 
+      shape-rendering="crispEdges" 
+      vector-effect="non-scaling-stroke" 
+      stroke-width="1" 
+      d="M 3,0 h -3 v 3"/>
+    <path 
+      shape-rendering="crispEdges" 
+      vector-effect="non-scaling-stroke" 
+      stroke-width="1" 
+      d="M ${width - 3},0 h 3 v 3"/>
+    <path 
+      shape-rendering="crispEdges" 
+      vector-effect="non-scaling-stroke" 
+      stroke-width="1" 
+      d="M 3,${height} h -3 v -3"/>
+    <path 
+      shape-rendering="crispEdges" 
+      vector-effect="non-scaling-stroke" 
+      stroke-width="1" 
+      d="M ${width - 3},${height} h 3 v -3"/>
   </svg>`
 
 
@@ -59,7 +76,7 @@ const svgQRCode =
         width: 570,
         height: 570,
         padding: 0
-      })}"/> 
+      })}"/>
     <rect 
       x="245" y="245" 
       width="80" 
@@ -104,6 +121,7 @@ const AQRBill = {
 
   qrCodeString: '',
 
+  showQRCode: false,
   showReference: showWith('referenceType', ['QRR', 'SCOR']),
   showAdditionalInfo: showWith('version', ['1a', '1b', '2a', '2b']),
   showBlanks: showWith('version', ['3b']),
@@ -130,6 +148,7 @@ const AQRBill = {
     
     qrCodeString,
 
+    showQRCode,
     showReference,
     showAdditionalInfo,
     showBlanks,
@@ -193,7 +212,10 @@ const AQRBill = {
         <div class="h-7 font-bold text-11 leading-none">${lang.paymentPartTitle}</div>
 
         <div class="h-56 py-5 pr-5">
-          ${svgQRCode(qrCodeString)}
+          ${showQRCode ? 
+            svgQRCode(qrCodeString, showQRCode) : 
+            svgBlankField(46, 46)
+          }
         </div>
 
         ${showBlanks ? html`

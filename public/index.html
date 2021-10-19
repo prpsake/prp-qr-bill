@@ -5,9 +5,10 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>PRP QR Bill</title>
   
   <style>
+    
     @font-face {
       font-family: LiberationSans;
       src: url('fonts/LiberationSans-Regular.woff') format('woff');
@@ -34,6 +35,17 @@
       margin: 0;
       overflow: hidden;
       background-image: linear-gradient(#051527, darkslategrey);
+    }
+
+    body:before {
+      display: block;
+      position: absolute;
+      bottom: .6rem;
+      right: 1rem;
+      content: "\2620";
+      font-size: 2rem;
+      line-height: 1;
+      color: #051527;
     }
 
     .wrapper {
