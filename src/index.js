@@ -9,7 +9,7 @@
 
 import styles from './index.a.css'
 import { define, html, property } from 'hybrids'
-import { showWith } from './Factories.js'
+import { showWith, notShowWith } from './Factories.js'
 import { translate } from './Translations.bs.js'
 import * as Parser from './Parser.bs.js'
 import * as Validator from './Validator.bs.js'
@@ -95,6 +95,7 @@ const AQRBill = {
   data: property(Parser.parseJson, (host, key) => {
     const entries = Validator.validateEntries(host[key])
     host.qrCodeString = QRCode.stringFromEntries(entries)
+    //console.log(host.qrCodeString)
     entries.forEach(([k, v]) => host[k] = v)
   }),
 
@@ -122,9 +123,10 @@ const AQRBill = {
   qrCodeString: '',
 
   showQRCode: false,
-  showReference: showWith('referenceType', ['QRR', 'SCOR']),
-  showAdditionalInfo: showWith('version', ['1a', '1b', '2a', '2b']),
-  showBlanks: showWith('version', ['3b']),
+  showAmount: notShowWith({ amount: [''] }),
+  showReference: showWith({ referenceType: ['QRR', 'SCOR'] }),
+  showDebtor: notShowWith({ debtorName: [''], debtorAddressLine1: [''], debtorAddressLine2: [''] }),
+  showAdditionalInfo: notShowWith({ message: [''], messageCode: [''] }),
 
   reduceContent: false,
 
@@ -149,9 +151,10 @@ const AQRBill = {
     qrCodeString,
 
     showQRCode,
+    showAmount,
     showReference,
     showAdditionalInfo,
-    showBlanks,
+    showDebtor,
 
     reduceContent
 
@@ -178,15 +181,15 @@ const AQRBill = {
       `}
 
       <div class="font-bold text-6 leading-9">
-        ${showBlanks ? lang.debtorFieldHeading : lang.debtorHeading}
+        ${showDebtor ? lang.debtorHeading : lang.debtorFieldHeading}
       </div>
-      ${showBlanks ? svgBlankField(52, 20, { marginTop: '.8pt' }) : html`
+      ${showDebtor ? html`
         <div class="text-8 leading-9">
           <div>${debtorName}</div>
           ${!reduceContent && html`<div>${debtorAddressLine1}</div>`}
           <div>${debtorAddressLine2}</div>
         </div>
-      `}
+      ` : svgBlankField(52, 20, { marginTop: '.8pt' })}
     </div>
 
     <div class="h-14 flex">
@@ -195,11 +198,12 @@ const AQRBill = {
         <div class="text-8 leading-9">${currency}</div>
       </div>
 
-      <div class=${{ 'flex-grow': true, flex: showBlanks }}>
+      <div class=${{ 'flex-grow': true, flex: !showAmount }}>
         <div class="font-bold text-6 leading-9">${lang.amountHeading}</div>
-        ${showBlanks ? svgBlankField(30, 10, { marginTop: '2pt', marginLeft: '4pt' }) : html`
-          <div class="text-8 leading-9">${amount}</div>
-        `}
+        ${showAmount ? 
+          html`<div class="text-8 leading-9">${amount}</div>` : 
+          svgBlankField(30, 10, { marginTop: '2pt', marginLeft: '4pt' })
+        }
       </div>
     </div>
 
@@ -218,18 +222,7 @@ const AQRBill = {
           }
         </div>
 
-        ${showBlanks ? html`
-          <div class="h-22">
-            <div class="flex font-bold text-8 leading-11">
-              <div class="mr-line-7">${lang.currencyHeading}</div>
-              <div>${lang.amountHeading}</div>
-            </div>
-            <div class="flex">
-              <div class="text-10 leading-11 mr-line-9">${currency}</div>
-              ${svgBlankField(40, 15, { marginTop: '1.6pt' })}
-            </div>
-          </div>
-        ` : html`
+        ${showAmount ? html`
           <div class="h-22 flex">
             <div class="flex-shrink w-22">
               <div class="font-bold text-8 leading-11">${lang.currencyHeading}</div>
@@ -239,6 +232,17 @@ const AQRBill = {
             <div class="flex-grow">
               <div class="font-bold text-8 leading-11">${lang.amountHeading}</div>
               <div class="text-10 leading-11">${amount}</div>
+            </div>
+          </div>    
+        ` : html`
+          <div class="h-22">
+            <div class="flex font-bold text-8 leading-11">
+              <div class="mr-line-7">${lang.currencyHeading}</div>
+              <div>${lang.amountHeading}</div>
+            </div>
+            <div class="flex">
+              <div class="text-10 leading-11 mr-line-9">${currency}</div>
+              ${svgBlankField(40, 15, { marginTop: '1.6pt' })}
             </div>
           </div>
         `}
@@ -269,15 +273,15 @@ const AQRBill = {
         `}
 
         <div class="font-bold text-8 leading-11">
-          ${showBlanks ? lang.debtorFieldHeading : lang.debtorHeading}
+          ${showDebtor ? lang.debtorHeading : lang.debtorFieldHeading}
         </div>
-        ${showBlanks ? svgBlankField(65, 25, { marginTop: '1.1pt' }) : html`
+        ${showDebtor ? html`
           <div class="text-10 leading-11">
             <div>${debtorName}</div>
             <div>${debtorAddressLine1}</div>
             <div>${debtorAddressLine2}</div>
           </div>
-        `}
+        ` : svgBlankField(65, 25, { marginTop: '1.1pt' })}
       </div>
 
     </div>

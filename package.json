@@ -1,8 +1,11 @@
 {
-  "name": "prp-qr-bill",
+  "name": "@prpsake/prp-qr-bill",
   "version": "0.1.0",
   "description": "HTML QR-Bill using hybrids.js",
   "main": "index.js",
+  "publishConfig": {
+    "registry": " https://npm.ampire.ch/"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/prpsake/prp-qr-bill.git"

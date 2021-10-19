@@ -2,6 +2,12 @@ type jsonEntry = (string, Js.Json.t)
 
 
 
+type entries =
+ | User(array<jsonEntry>)
+ | Default(array<jsonEntry>)
+
+
+
 let defaultRootEntries: array<jsonEntry> = {
   open Js.Json
   [
@@ -71,7 +77,7 @@ let entryFromData: Js.Dict.t<Js.Json.t> => jsonEntry => jsonEntry =
 
 
 
-let entriesFromNestedData: Js.Dict.t<Js.Json.t> => array<jsonEntry> => string => array<jsonEntry> =
+let entriesFromNestedData: Js.Dict.t<Js.Json.t> => array<jsonEntry> => string => entries =
   data =>
   defaultNestedEntries =>
   key =>
@@ -79,11 +85,13 @@ let entriesFromNestedData: Js.Dict.t<Js.Json.t> => array<jsonEntry> => string =>
   | Some(x) =>
     switch Js.Json.classify(x) {
     | JSONObject(nestedData) =>
-      defaultNestedEntries
-      ->Js.Array2.map(entryFromData(nestedData))
-    | _ => defaultNestedEntries
+      User(
+        defaultNestedEntries
+        ->Js.Array2.map(entryFromData(nestedData))
+      )
+    | _ => Default(defaultNestedEntries)
     }
-  | None => defaultNestedEntries
+  | None => Default(defaultNestedEntries)
   }
 
 
@@ -120,22 +128,26 @@ let referenceTypeEntryFromEntries: array<jsonEntry> => array<jsonEntry> =
 
 
 
-let addressTypeEntryFromEntries: array<jsonEntry> => array<jsonEntry> =
+let addressTypeEntryFromEntries: entries => array<jsonEntry> =
   entries =>
-  Js.Array2.filter(
-    entries, 
-    ((k, _)) => k == "streeNumber" || k == "postalCode"
-  )
-  ->Js.Array2.some( // QUESTION: .every ?
-      ((_, v)) =>
-      switch Js.Json.classify(v) {
-      | JSONString(v) => v != ""
-      | _ => false
-      } 
+  switch entries {
+  | User(x) =>
+    Js.Array2.filter(
+      x, 
+      ((k, _)) => k == "streeNumber" || k == "postalCode"
     )
-  ->isStructured => (isStructured ? "S" : "K")
-  ->value => [("addressType", Js.Json.string(value))]
-  ->Js.Array2.concat(entries)
+    ->Js.Array2.some( // QUESTION: .every ?
+        ((_, v)) =>
+        switch Js.Json.classify(v) {
+        | JSONString(v) => v != ""
+        | _ => false
+        } 
+      )
+    ->isStructured => (x, (isStructured ? "S" : "K"))
+  | Default(x) => (x, "")
+  }
+  ->((jsonEntries, addressType)) => 
+    Js.Array2.concat(jsonEntries, [("addressType", Js.Json.string(addressType))])
 
 
 
