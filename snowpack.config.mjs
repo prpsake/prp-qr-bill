@@ -3,7 +3,7 @@ import execa from 'execa'
 
 export default {
   mount: {
-    src: '/_dist',
+    src: '/dist',
     public: '/',
   },
   devOptions: {},
