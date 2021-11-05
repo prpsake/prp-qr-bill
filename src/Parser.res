@@ -134,7 +134,7 @@ let addressTypeEntryFromEntries: entries => array<jsonEntry> =
   | User(x) =>
     Js.Array2.filter(
       x, 
-      ((k, _)) => k == "streeNumber" || k == "postalCode"
+      ((k, _)) => k == "streetNumber" || k == "postalCode"
     )
     ->Js.Array2.some( // QUESTION: .every ?
         ((_, v)) =>

@@ -10,12 +10,12 @@ type entry = (string, string)
 
 
 
-type errorCorrectionLevel = 
+type errorCorrectionLevel =
   [
-    #L 
-  | #M 
+    #L
+  | #M
   | #Q
-  | #H 
+  | #H
   ]
 
 
@@ -82,7 +82,7 @@ let stringFromEntries: array<entry> => string =
       "",
       "",
       data->valueFromEntry("creditorCountryCode"),
-      
+
       // ultimate creditor (future FEATURE)
       "",
       "",
@@ -124,7 +124,7 @@ let stringFromEntries: array<entry> => string =
 
 let pathDataFromString: string => pathDataOptions => string =
   content =>
-  options => 
+  options =>
   code({
     content,
     ecl: options.ecl,

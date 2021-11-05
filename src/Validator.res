@@ -96,6 +96,7 @@ let mod10FromIntString: string => string =
   }
 
 
+
 let concatResult: validationResult<'a> => validationResult<'a> => validationResult<'a> =
   result =>
   otherResult =>

@@ -17,6 +17,9 @@ import * as Formatter from './Formatter.bs.js'
 import * as QRCode from './QRCode.bs.js'
 
 
+import * as Parser2 from './Parser2.bs.js'
+
+
 
 /* NB: 
    stroke-width 0.4 (mm) is a visual approximation.
@@ -92,11 +95,12 @@ const svgQRCode =
 
 const AQRBill = {
   tag: 'a-qr-bill',
-  data: property(Parser.parseJson, (host, key) => {
-    const entries = Validator.validateEntries(host[key])
-    host.qrCodeString = QRCode.stringFromEntries(entries)
+  data: property(Parser2.parseJson, (host, key) => {
+    console.log(host[key])
+    //const entries = Validator.validateEntries(host[key])
+    //host.qrCodeString = QRCode.stringFromEntries(entries)
     //console.log(host.qrCodeString)
-    entries.forEach(([k, v]) => host[k] = v)
+    //entries.forEach(([k, v]) => host[k] = v)
   }),
 
   version: '',
