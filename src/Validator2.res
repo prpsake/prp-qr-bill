@@ -1,12 +1,10 @@
+type dataOptionVal<'a> = { key: string, val: 'a }
+
+
+
 type dataOption<'a> =
-  | User({
-      key: string,
-      val: 'a
-    })
-  | Default({
-      key: string,
-      val: 'a
-    })
+  | User(dataOptionVal<'a>)
+  | Default(dataOptionVal<'a>)
   | Error({
       @as("type") _type: string,
       key: string,
@@ -14,7 +12,6 @@ type dataOption<'a> =
       msg: string
     })
   | None
-
 
 
 
@@ -172,6 +169,53 @@ let validateIban: dataOption<string> => dataOption<string> =
     }
   | t => t
   }
+
+
+
+let validateQRR: dataOptionVal<'a> => dataOption<'a> =
+  ({key, val}) => {
+    let valTrim = Formatter.removeWhitespace(val)
+    mod10FromIntString(valTrim)
+    ->a => {
+        let b = Js.String2.sliceToEnd(valTrim, ~from=26)
+        a == b ?
+        User({key, val: valTrim}) :
+        Error({
+          _type: "Validator",
+          key,
+          val: valTrim,
+          msg: "fails on the check digit: expected" ++b++ " but got " ++a,
+        })
+      }
+    ->validateWithRexp(
+        x => Js.String2.match_(x, %re("/^\S{27}$/")),
+        "must be 27 characters long"
+      )
+  }
+
+
+
+let validateSCOR: validationSuccess => validationResult<'a> =
+  ({key, val}) =>
+  Ok({key, val}) //TODO: missing actual validation
+  ->validateWithRexp(
+      x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^\S{5,25}$/")),
+      "must be 5 to 25 characters long"
+    )
+
+
+
+let validateNON: validationSuccess => validationResult<'a> =
+  ({key, val}) =>
+  val === "" ? 
+  Ok({key, val}) :
+  Error({
+    key,
+    val,
+    msg: ["got removed as the reference type was determined as NON"],
+    display: ""
+  })
+
 
 
 

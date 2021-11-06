@@ -1,12 +1,10 @@
+type dataOptionVal<'a> = { key: string, val: 'a }
+
+
+
 type dataOption<'a> =
-  | User({
-      key: string,
-      val: 'a
-    })
-  | Default({
-      key: string,
-      val: 'a
-    })
+  | User(dataOptionVal<'a>)
+  | Default(dataOptionVal<'a>)
   | Error({
       @as("type") _type: string,
       key: string,
@@ -17,7 +15,7 @@ type dataOption<'a> =
 
 
 
-type appAddress = {
+type addressData = {
   addressType: dataOption<string>,
   name: dataOption<string>,
   street: dataOption<string>,
@@ -35,12 +33,12 @@ type data = {
   currency: dataOption<string>,
   amount: dataOption<string>,
   iban: dataOption<string>,
-  reference: dataOption<string>,
   referenceType: dataOption<string>,
+  reference: dataOption<string>,
   message: dataOption<string>,
   messageCode: dataOption<string>,
-  creditor: dataOption<appAddress>,
-  debtor: dataOption<appAddress>
+  creditor: dataOption<addressData>,
+  debtor: dataOption<addressData>
 }
 
 
@@ -50,8 +48,8 @@ let defaultData: data = {
   currency: None,
   amount: None,
   iban: None,
-  reference: None,
   referenceType: Default({ key: "referenceType", val: "NON" }),
+  reference: None,
   message: None,
   messageCode: None,
   creditor: None,
@@ -60,58 +58,56 @@ let defaultData: data = {
 
 
 
-let parseString: Js.Json.t => string => dataOption<string> => dataOption<string> =
-  t =>
-  key =>
-  defaultDataOption =>
-  switch Js.Json.classify(t) {
-  | JSONString(s) =>
-    switch Js.String.trim(s) {
-    | "" => defaultDataOption
-    | _ => User({ key, val: s }) 
-    }
-  | JSONNumber(n) => User({ key, val: Js.Float.toString(n) })
-  | _ => defaultDataOption
-  }
-
-
-
-let parseFloatString: Js.Json.t => string => dataOption<'a> => dataOption<string> =
-  t =>
-  key => 
-  defaultDataOption =>
-  switch Js.Json.classify(t) {
-  | JSONNumber(n) => User({ key, val: Js.Float.toString(n) })
-  | JSONString(s) =>
-    switch Js.String.trim(s) {
-    | "" => defaultDataOption
-    | _ =>
-      Js.Float.fromString(s)
-      ->n => 
-        Js.Float.isNaN(n) ? 
-        defaultDataOption 
-        : 
-        User({ key, val: s })
-    }
-  | _ => defaultDataOption
-  }
-
-
-
-let parseWithFn: 
-  Js.Dict.t<Js.Json.t> => 
-  string => 
-  (Js.Json.t => string => dataOption<'a> => dataOption<'a>) => 
-  dataOption<'a> => 
-  dataOption<'a> 
-  =
+let dictGet: Js.Dict.t<Js.Json.t> => string => dataOption<'a> =
   d =>
   key =>
-  fn =>
-  defaultDataOption =>
   switch Js.Dict.get(d, key) {
-  | Some(x) => fn(x, key, defaultDataOption)
-  | None => defaultDataOption
+  | Some(val) => User({ key, val })
+  | None => None
+  }
+
+
+
+let parseString: dataOption<Js.Json.t> => dataOption<string> => dataOption<string> =
+  o =>
+  dfo =>
+  switch o {
+  | User({ key, val }) =>
+    switch Js.Json.classify(val) {
+    | JSONString(s) =>
+      switch Js.String.trim(s) {
+      | "" => dfo
+      | _ => User({ key, val: s })  
+      }
+    | JSONNumber(n) => User({ key, val: Js.Float.toString(n) })
+    | _ => dfo
+    }
+  | _ => dfo
+  }
+
+
+
+let parseFloatString: dataOption<Js.Json.t> => dataOption<string> => dataOption<string> =
+  o =>
+  dfo =>
+  switch o {
+  | User({ key, val }) =>
+    switch Js.Json.classify(val) {
+    | JSONString(s) =>
+      switch Js.String.trim(s) {
+      | "" => dfo
+      | _ =>
+        Js.Float.fromString(s)
+        ->n => 
+          Js.Float.isNaN(n) ? 
+          dfo 
+          : 
+          User({ key, val: s })
+      }
+    | JSONNumber(n) => User({ key, val: Js.Float.toString(n) })
+    | _ => dfo
+    }
+  | _ => dfo
   }
 
 
@@ -145,33 +141,35 @@ let parseJson: string => data =
       ->Js.Json.parseExn
     switch Js.Json.classify(json) {
     | JSONObject(d) =>
-      let iban = parseWithFn(d, "iban", parseString, defaultData.iban)
-      let reference = parseWithFn(d, "reference", parseString, defaultData.reference)
+      let dataGet = dictGet(d)
+      let iban = dataGet("iban")->parseString(defaultData.iban)
+      let reference = dataGet("reference")->parseString(defaultData.reference)
       {
-        lang: parseWithFn(d, "lang", parseString, defaultData.lang),
-        currency: parseWithFn(d, "currency", parseString, defaultData.currency),
-        amount: parseWithFn(d, "amount", parseFloatString, defaultData.amount),
+        lang: dataGet("lang")->parseString(defaultData.lang),
+        currency: dataGet("currency")->parseString(defaultData.currency),
+        amount: dataGet("amount")->parseFloatString(defaultData.amount),
         iban,
-        reference,
         referenceType: chooseReferenceType(reference, iban),
-        message: parseWithFn(d, "message", parseString, defaultData.message),
-        messageCode: parseWithFn(d, "messageCode", parseString, defaultData.messageCode),
+        reference,
+        message: dataGet("message")->parseString(defaultData.message),
+        messageCode: dataGet("messageCode")->parseString(defaultData.messageCode),
         creditor:
           switch Js.Dict.get(d, "creditor") {
           | Some(x) =>
             switch Js.Json.classify(x) {
             | JSONObject(d) =>
+              let addressDataGet = dictGet(d)
               User({ 
                 key: "creditor", 
                 val: {
                   addressType: None,
-                  name: parseWithFn(d, "messageCode", parseString, None),
-                  street: parseWithFn(d, "street", parseString, None),
-                  streetNumber: parseWithFn(d, "streeNumber", parseString, None),
-                  postOfficeBox: parseWithFn(d, "postOfficeBox", parseString, None),
-                  postalCode: parseWithFn(d, "postalCode", parseString, None),
-                  locality: parseWithFn(d, "locality", parseString, None),
-                  countryCode: parseWithFn(d, "locality", parseString, None)
+                  name: addressDataGet("name")->parseString(None),
+                  street: addressDataGet("street")->parseString(None),
+                  streetNumber: addressDataGet("streetNumber")->parseString(None),
+                  postOfficeBox: addressDataGet("postOfficeBox")->parseString(None),
+                  postalCode: addressDataGet("postalCode")->parseString(None),
+                  locality: addressDataGet("locality")->parseString(None),
+                  countryCode: addressDataGet("countryCode")->parseString(None)
                 }
               })
             | _ => defaultData.creditor
@@ -183,17 +181,18 @@ let parseJson: string => data =
           | Some(x) =>
             switch Js.Json.classify(x) {
             | JSONObject(d) =>
+              let addressDataGet = dictGet(d)
               User({ 
                 key: "debtor", 
                 val: {
                   addressType: None,
-                  name: parseWithFn(d, "messageCode", parseString, None),
-                  street: parseWithFn(d, "street", parseString, None),
-                  streetNumber: parseWithFn(d, "streeNumber", parseString, None),
-                  postOfficeBox: parseWithFn(d, "postOfficeBox", parseString, None),
-                  postalCode: parseWithFn(d, "postalCode", parseString, None),
-                  locality: parseWithFn(d, "locality", parseString, None),
-                  countryCode: parseWithFn(d, "locality", parseString, None)
+                  name: addressDataGet("name")->parseString(None),
+                  street: addressDataGet("street")->parseString(None),
+                  streetNumber: addressDataGet("streetNumber")->parseString(None),
+                  postOfficeBox: addressDataGet("postOfficeBox")->parseString(None),
+                  postalCode: addressDataGet("postalCode")->parseString(None),
+                  locality: addressDataGet("locality")->parseString(None),
+                  countryCode: addressDataGet("countryCode")->parseString(None)
                 }
               })
             | _ => defaultData.debtor
