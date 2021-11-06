@@ -98,11 +98,7 @@ let parseFloatString: dataOption<Js.Json.t> => dataOption<string> => dataOption<
       | "" => dfo
       | _ =>
         Js.Float.fromString(s)
-        ->n => 
-          Js.Float.isNaN(n) ? 
-          dfo 
-          : 
-          User({ key, val: s })
+        ->n => Js.Float.isNaN(n) ? dfo : User({ key, val: s })
       }
     | JSONNumber(n) => User({ key, val: Js.Float.toString(n) })
     | _ => dfo
@@ -119,14 +115,22 @@ let chooseReferenceType =
   | None => defaultData.referenceType
   | _ =>
     switch iban {
-    | User({ key, val }) =>
+    | User({ val }) =>
       Formatter.removeWhitespace(val)
       ->Js.String2.substring(~from=4, ~to_=5)
       ->x => (x == "3" ? "QRR" : "SCOR")
-      ->x => User({ key, val: x })
+      ->x => User({ key: "referenceType", val: x })
     | _ => defaultData.referenceType
     }
   }
+
+
+
+let chooseAddressType =
+  streetNumber =>
+  postalCode =>
+  (streetNumber === None || postalCode === None ? "K" : "S")
+  ->val => User({ key: "addressType", val })
 
 
 
@@ -159,15 +163,17 @@ let parseJson: string => data =
             switch Js.Json.classify(x) {
             | JSONObject(d) =>
               let addressDataGet = dictGet(d)
+              let streetNumber = addressDataGet("streetNumber")->parseString(None)
+              let postalCode = addressDataGet("postalCode")->parseString(None)
               User({ 
                 key: "creditor", 
                 val: {
-                  addressType: None,
+                  addressType: chooseAddressType(streetNumber, postalCode),
                   name: addressDataGet("name")->parseString(None),
                   street: addressDataGet("street")->parseString(None),
-                  streetNumber: addressDataGet("streetNumber")->parseString(None),
+                  streetNumber,
                   postOfficeBox: addressDataGet("postOfficeBox")->parseString(None),
-                  postalCode: addressDataGet("postalCode")->parseString(None),
+                  postalCode,
                   locality: addressDataGet("locality")->parseString(None),
                   countryCode: addressDataGet("countryCode")->parseString(None)
                 }
@@ -182,15 +188,17 @@ let parseJson: string => data =
             switch Js.Json.classify(x) {
             | JSONObject(d) =>
               let addressDataGet = dictGet(d)
+              let streetNumber = addressDataGet("streetNumber")->parseString(None)
+              let postalCode = addressDataGet("postalCode")->parseString(None)
               User({ 
                 key: "debtor", 
                 val: {
-                  addressType: None,
+                  addressType: chooseAddressType(streetNumber, postalCode),
                   name: addressDataGet("name")->parseString(None),
                   street: addressDataGet("street")->parseString(None),
-                  streetNumber: addressDataGet("streetNumber")->parseString(None),
+                  streetNumber,
                   postOfficeBox: addressDataGet("postOfficeBox")->parseString(None),
-                  postalCode: addressDataGet("postalCode")->parseString(None),
+                  postalCode,
                   locality: addressDataGet("locality")->parseString(None),
                   countryCode: addressDataGet("countryCode")->parseString(None)
                 }

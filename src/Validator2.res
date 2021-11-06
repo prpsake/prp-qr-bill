@@ -15,7 +15,7 @@ type dataOption<'a> =
 
 
 
-type appAddress = {
+type addressData = {
   addressType: dataOption<string>,
   name: dataOption<string>,
   street: dataOption<string>,
@@ -33,11 +33,12 @@ type data = {
   currency: dataOption<string>,
   amount: dataOption<string>,
   iban: dataOption<string>,
+  referenceType: dataOption<string>,
   reference: dataOption<string>,
   message: dataOption<string>,
   messageCode: dataOption<string>,
-  creditor: dataOption<appAddress>,
-  debtor: dataOption<appAddress>
+  creditor: dataOption<addressData>,
+  debtor: dataOption<addressData>
 }
 
 
@@ -172,8 +173,8 @@ let validateIban: dataOption<string> => dataOption<string> =
 
 
 
-let validateQRR: dataOptionVal<'a> => dataOption<'a> =
-  ({key, val}) => {
+let validateQRR: dataOptionVal<string> => dataOption<string> =
+  ({ key, val }) => {
     let valTrim = Formatter.removeWhitespace(val)
     mod10FromIntString(valTrim)
     ->a => {
@@ -195,9 +196,9 @@ let validateQRR: dataOptionVal<'a> => dataOption<'a> =
 
 
 
-let validateSCOR: validationSuccess => validationResult<'a> =
-  ({key, val}) =>
-  Ok({key, val}) //TODO: missing actual validation
+let validateSCOR: dataOptionVal<string> => dataOption<string> =
+  ov =>
+  User(ov) //TODO: missing actual validation
   ->validateWithRexp(
       x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^\S{5,25}$/")),
       "must be 5 to 25 characters long"
@@ -205,59 +206,129 @@ let validateSCOR: validationSuccess => validationResult<'a> =
 
 
 
-let validateNON: validationSuccess => validationResult<'a> =
-  ({key, val}) =>
-  val === "" ? 
-  Ok({key, val}) :
-  Error({
-    key,
-    val,
-    msg: ["got removed as the reference type was determined as NON"],
-    display: ""
-  })
+let validateReference:  dataOption<string> => dataOption<string> => dataOption<string> =
+  reference =>
+  referenceType =>
+  switch reference {
+  | User({ key, val }) =>
+    switch referenceType {
+    | User(ov) =>
+      switch ov.val {
+      | "QRR" => validateQRR({ key, val })
+      | "SCOR" => validateSCOR({ key, val })
+      | _ =>
+        Error({
+          _type: "Validator", key, val,
+          msg: "fails as no reference type could be determined for a non-empty reference value",
+        })
+      }
+    | t => t
+    }
+  | t => t
+  }
 
+
+
+let validateAddressData: dataOption<'a> => dataOption<'a> =
+  o =>
+  switch o {
+  | User({ key, val: ad }) =>
+    User({
+      key,
+      val: {
+        addressType:
+          ad.addressType
+          ->validateWithRexp(
+              x => Js.String2.trim(x)->Js.String2.match_(%re("/^(K|S){1}$/")),
+              "must be either K or S"
+            ),
+        name:
+          ad.name
+          ->validateWithRexp(
+              x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{1,70}$/")),
+              "must not be empty and at most 70 characters long"
+            ),
+        street: 
+          ad.street
+          ->validateWithRexp(
+              x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
+              "street must be at most 70 characters long"
+            ),
+        streetNumber: None,
+        postOfficeBox: None,
+        postalCode: None,
+        locality: None,
+        countryCode: None
+      }
+    })
+  | t => t
+  }
 
 
 
 let validateData: data => data =
   d =>
-  {
-    lang: 
-      d.lang
-      ->validateWithRexp(
-          x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^(en|de|fr|it)$/")),
-          "must be either en, de, fr, or it"
-        ),
-    currency: 
-      d.currency
-      ->validateWithRexp(
-          x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^(CHF|EUR)$/")),
-          "must be either CHF or EUR"
-        ),
-    amount: 
-      d.amount
-      ->validateWithPred(
-          x => 
-          Formatter.removeWhitespace(x)
-          ->Js.Float.fromString
-          ->Js.Float.toFixedWithPrecision(~digits=2)
-          ->Js.Float.fromString
-          ->x => x >= 0.01 && x <= 999999999.99,
-          "must be a number ranging from 0.01 to 999999999.99"
-        ),
-    iban: 
-      d.iban
-      ->validateWithRexp(
-        x => 
-        Formatter.removeWhitespace(x)
-        ->Js.String2.toUpperCase
-        ->Js.String2.match_(%re("/^(CH|LI)[0-9]{19}$/")), 
-        "must start with countryCode CH or LI followed by 19 digits (ex. CH1234567890123456789)"
-      )
-      ->validateIban,
-    reference: None,
-    message: None,
-    messageCode: None,
-    creditor: None,
-    debtor: None
-  }
+  d.referenceType
+  ->validateWithRexp(
+      x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^(QRR|SCOR|NON)$/")), 
+      "must be either QRR, SCOR or NON"
+    )
+  ->referenceType =>
+    {
+      lang: 
+        d.lang
+        ->validateWithRexp(
+            x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^(en|de|fr|it)$/")),
+            "must be either en, de, fr, or it"
+          ),
+
+      currency: 
+        d.currency
+        ->validateWithRexp(
+            x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^(CHF|EUR)$/")),
+            "must be either CHF or EUR"
+          ),
+
+      amount: 
+        d.amount
+        ->validateWithPred(
+            x => 
+            Formatter.removeWhitespace(x)
+            ->Js.Float.fromString
+            ->Js.Float.toFixedWithPrecision(~digits=2)
+            ->Js.Float.fromString
+            ->x => x >= 0.01 && x <= 999999999.99,
+            "must be a number ranging from 0.01 to 999999999.99"
+          ),
+
+      iban: 
+        d.iban
+        ->validateWithRexp(
+            x => 
+            Formatter.removeWhitespace(x)
+            ->Js.String2.toUpperCase
+            ->Js.String2.match_(%re("/^(CH|LI)[0-9]{19}$/")), 
+            "must start with countryCode CH or LI followed by 19 digits (ex. CH1234567890123456789)"
+          )
+        ->validateIban,
+
+      referenceType,
+      reference: d.reference->validateReference(referenceType),
+
+      message:
+        d.message
+        ->validateWithRexp(
+            x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,140}$/")),
+            "must be at most 140 characters long"
+          ),
+
+      messageCode:
+        d.messageCode
+        ->validateWithRexp(
+            x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,140}$/")),
+            "must be at most 140 characters long"
+          ),
+
+      creditor: d.creditor->validateAddressData,
+      debtor: d.debtor->validateAddressData
+    }
