@@ -252,13 +252,38 @@ let validateAddressData: dataOption<'a> => dataOption<'a> =
           ad.street
           ->validateWithRexp(
               x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
-              "street must be at most 70 characters long"
+              " must be at most 70 characters long"
             ),
-        streetNumber: None,
-        postOfficeBox: None,
-        postalCode: None,
-        locality: None,
-        countryCode: None
+        streetNumber:
+          ad.streetNumber
+          ->validateWithRexp(
+              x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
+              "must be at most 16 characters long"
+            ),
+        postOfficeBox:
+          ad.postOfficeBox
+          ->validateWithRexp(
+              x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,70}$/")),
+              "must be at most 70 characters long"
+            ),
+        postalCode:
+          ad.postalCode
+          ->validateWithRexp(
+               x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{0,16}$/")),
+              "must be at most 16 characters long for structured address values"
+            ),
+        locality:
+          ad.locality
+          ->validateWithRexp(
+               x => Js.String2.trim(x)->Js.String2.match_(%re("/^[\s\S]{1,35}$/")),
+              "must not be empty and at most 35 characters long"
+            ),
+        countryCode:
+          ad.countryCode
+          ->validateWithRexp(
+              x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^\S{2}$/")),
+              "must be 2 characters long"
+            )
       }
     })
   | t => t
@@ -266,7 +291,7 @@ let validateAddressData: dataOption<'a> => dataOption<'a> =
 
 
 
-let validateData: data => data =
+let validate: data => data =
   d =>
   d.referenceType
   ->validateWithRexp(

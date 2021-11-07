@@ -18,6 +18,7 @@ import * as QRCode from './QRCode.bs.js'
 
 
 import * as Parser2 from './Parser2.bs.js'
+import * as Validator2 from './Validator2.bs.js'
 
 
 
@@ -97,7 +98,8 @@ const AQRBill = {
   tag: 'a-qr-bill',
   data: property(Parser2.parseJson, (host, key) => {
     console.log(host[key])
-    //const entries = Validator.validateEntries(host[key])
+    const data = Validator2.validate(host[key])
+    console.log(data)
     //host.qrCodeString = QRCode.stringFromEntries(entries)
     //console.log(host.qrCodeString)
     //entries.forEach(([k, v]) => host[k] = v)
