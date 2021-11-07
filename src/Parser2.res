@@ -1,85 +1,53 @@
-type dataOptionVal<'a> = { key: string, val: 'a }
-
-
-
-type dataOption<'a> =
-  | User(dataOptionVal<'a>)
-  | Default(dataOptionVal<'a>)
-  | Error({
-      @as("type") _type: string,
-      key: string,
-      val: string,
-      msg: string
-    })
-  | None
-
-
-
-type addressData = {
-  addressType: dataOption<string>,
-  name: dataOption<string>,
-  street: dataOption<string>,
-  streetNumber: dataOption<string>,
-  postOfficeBox: dataOption<string>,
-  postalCode: dataOption<string>,
-  locality: dataOption<string>,
-  countryCode: dataOption<string>
+let defaultAddressData: Data.addressData = {
+  addressType: Data.Default({ key: "addressType", val: "" }),
+  name: Data.Default({ key: "name", val: "" }),
+  street: Data.Default({ key: "street", val: "" }),
+  streetNumber: Data.Default({ key: "streetNumber", val: "" }),
+  postOfficeBox: Data.Default({ key: "postOfficeBox", val: "" }),
+  postalCode: Data.Default({ key: "postalCode", val: "" }),
+  locality: Data.Default({ key: "locality", val: "" }),
+  countryCode: Data.Default({ key: "countryCode", val: "" })
 }
 
 
 
-type data = {
-  lang: dataOption<string>,
-  currency: dataOption<string>,
-  amount: dataOption<string>,
-  iban: dataOption<string>,
-  referenceType: dataOption<string>,
-  reference: dataOption<string>,
-  message: dataOption<string>,
-  messageCode: dataOption<string>,
-  creditor: dataOption<addressData>,
-  debtor: dataOption<addressData>
+let defaultData: Data.data = {
+  lang: Data.Default({ key: "lang", val: "en" }),
+  currency: Data.None,
+  amount: Data.None,
+  iban: Data.None,
+  referenceType: Data.Default({ key: "referenceType", val: "NON" }),
+  reference: Data.None,
+  message: Data.None,
+  messageCode: Data.None,
+  creditor: Data.Default({ key: "creditor", val: defaultAddressData }),
+  debtor: Data.Default({ key: "debtor", val: defaultAddressData }),
 }
 
 
 
-let defaultData: data = {
-  lang: Default({ key: "lang", val: "en" }),
-  currency: None,
-  amount: None,
-  iban: None,
-  referenceType: Default({ key: "referenceType", val: "NON" }),
-  reference: None,
-  message: None,
-  messageCode: None,
-  creditor: None,
-  debtor: None
-}
-
-
-
-let dictGet: Js.Dict.t<Js.Json.t> => string => dataOption<'a> =
+let dictGet: Js.Dict.t<Js.Json.t> => string => Data.dataOption<'a> =
   d =>
   key =>
   switch Js.Dict.get(d, key) {
-  | Some(val) => User({ key, val })
-  | None => None
+  | Some(val) => Data.User({ key, val })
+  | None => Data.None
   }
 
 
 
-let parseString: dataOption<Js.Json.t> => dataOption<string> => dataOption<string> =
+let parseString: Data.dataOption<Js.Json.t> => Data.dataOption<string> => Data.dataOption<string> =
   o =>
   dfo =>
   switch o {
-  | User({ key, val }) =>
+  | Data.User({ key, val }) =>
     switch Js.Json.classify(val) {
     | JSONString(s) =>
       switch Js.String.trim(s) {
       | "" => dfo
-      | _ => User({ key, val: s })  
+      | _ => Data.User({ key, val: s })  
       }
-    | JSONNumber(n) => User({ key, val: Js.Float.toString(n) })
+    | JSONNumber(n) => Data.User({ key, val: Js.Float.toString(n) })
     | _ => dfo
     }
   | _ => dfo
@@ -87,20 +55,20 @@ let parseString: dataOption<Js.Json.t> => dataOption<string> => dataOption<strin
 
 
 
-let parseFloatString: dataOption<Js.Json.t> => dataOption<string> => dataOption<string> =
+let parseFloatString: Data.dataOption<Js.Json.t> => Data.dataOption<string> => Data.dataOption<string> =
   o =>
   dfo =>
   switch o {
-  | User({ key, val }) =>
+  | Data.User({ key, val }) =>
     switch Js.Json.classify(val) {
     | JSONString(s) =>
       switch Js.String.trim(s) {
       | "" => dfo
       | _ =>
         Js.Float.fromString(s)
-        ->n => Js.Float.isNaN(n) ? dfo : User({ key, val: s })
+        ->n => Js.Float.isNaN(n) ? dfo : Data.User({ key, val: s })
       }
-    | JSONNumber(n) => User({ key, val: Js.Float.toString(n) })
+    | JSONNumber(n) => Data.User({ key, val: Js.Float.toString(n) })
     | _ => dfo
     }
   | _ => dfo
@@ -112,14 +80,14 @@ let chooseReferenceType =
   reference =>
   iban =>
   switch reference {
-  | None => defaultData.referenceType
+  | Data.None => defaultData.referenceType
   | _ =>
     switch iban {
-    | User({ val }) =>
+    | Data.User({ val }) =>
       Formatter.removeWhitespace(val)
       ->Js.String2.substring(~from=4, ~to_=5)
       ->x => (x == "3" ? "QRR" : "SCOR")
-      ->x => User({ key: "referenceType", val: x })
+      ->x => Data.User({ key: "referenceType", val: x })
     | _ => defaultData.referenceType
     }
   }
@@ -129,12 +97,12 @@ let chooseReferenceType =
 let chooseAddressType =
   streetNumber =>
   postalCode =>
-  (streetNumber === None || postalCode === None ? "K" : "S")
-  ->val => User({ key: "addressType", val })
+  (streetNumber === Data.None || postalCode === Data.None ? "K" : "S")
+  ->val => Data.User({ key: "addressType", val })
 
 
 
-let parseJson: string => data =
+let parseJson: string => Data.data =
   str =>
   try {
     let json =
@@ -163,19 +131,19 @@ let parseJson: string => data =
             switch Js.Json.classify(x) {
             | JSONObject(d) =>
               let addressDataGet = dictGet(d)
-              let streetNumber = addressDataGet("streetNumber")->parseString(None)
-              let postalCode = addressDataGet("postalCode")->parseString(None)
-              User({ 
+              let streetNumber = addressDataGet("streetNumber")->parseString(Data.None)
+              let postalCode = addressDataGet("postalCode")->parseString(Data.None)
+              Data.User({ 
                 key: "creditor", 
                 val: {
                   addressType: chooseAddressType(streetNumber, postalCode),
-                  name: addressDataGet("name")->parseString(None),
-                  street: addressDataGet("street")->parseString(None),
+                  name: addressDataGet("name")->parseString(Data.None),
+                  street: addressDataGet("street")->parseString(Data.None),
                   streetNumber,
-                  postOfficeBox: addressDataGet("postOfficeBox")->parseString(None),
+                  postOfficeBox: addressDataGet("postOfficeBox")->parseString(Data.None),
                   postalCode,
-                  locality: addressDataGet("locality")->parseString(None),
-                  countryCode: addressDataGet("countryCode")->parseString(None)
+                  locality: addressDataGet("locality")->parseString(Data.None),
+                  countryCode: addressDataGet("countryCode")->parseString(Data.None)
                 }
               })
             | _ => defaultData.creditor
@@ -188,19 +156,19 @@ let parseJson: string => data =
             switch Js.Json.classify(x) {
             | JSONObject(d) =>
               let addressDataGet = dictGet(d)
-              let streetNumber = addressDataGet("streetNumber")->parseString(None)
-              let postalCode = addressDataGet("postalCode")->parseString(None)
-              User({ 
+              let streetNumber = addressDataGet("streetNumber")->parseString(Data.None)
+              let postalCode = addressDataGet("postalCode")->parseString(Data.None)
+              Data.User({ 
                 key: "debtor", 
                 val: {
                   addressType: chooseAddressType(streetNumber, postalCode),
-                  name: addressDataGet("name")->parseString(None),
-                  street: addressDataGet("street")->parseString(None),
+                  name: addressDataGet("name")->parseString(Data.None),
+                  street: addressDataGet("street")->parseString(Data.None),
                   streetNumber,
-                  postOfficeBox: addressDataGet("postOfficeBox")->parseString(None),
+                  postOfficeBox: addressDataGet("postOfficeBox")->parseString(Data.None),
                   postalCode,
-                  locality: addressDataGet("locality")->parseString(None),
-                  countryCode: addressDataGet("countryCode")->parseString(None)
+                  locality: addressDataGet("locality")->parseString(Data.None),
+                  countryCode: addressDataGet("countryCode")->parseString(Data.None)
                 }
               })
             | _ => defaultData.debtor

@@ -1,48 +1,3 @@
-type dataOptionVal<'a> = { key: string, val: 'a }
-
-
-
-type dataOption<'a> =
-  | User(dataOptionVal<'a>)
-  | Default(dataOptionVal<'a>)
-  | Error({
-      @as("type") _type: string,
-      key: string,
-      val: string,
-      msg: string
-    })
-  | None
-
-
-
-type addressData = {
-  addressType: dataOption<string>,
-  name: dataOption<string>,
-  street: dataOption<string>,
-  streetNumber: dataOption<string>,
-  postOfficeBox: dataOption<string>,
-  postalCode: dataOption<string>,
-  locality: dataOption<string>,
-  countryCode: dataOption<string>
-}
-
-
-
-type data = {
-  lang: dataOption<string>,
-  currency: dataOption<string>,
-  amount: dataOption<string>,
-  iban: dataOption<string>,
-  referenceType: dataOption<string>,
-  reference: dataOption<string>,
-  message: dataOption<string>,
-  messageCode: dataOption<string>,
-  creditor: dataOption<addressData>,
-  debtor: dataOption<addressData>
-}
-
-
-
 /**
 
 `mod97FromString(str)`
@@ -106,42 +61,42 @@ let mod10FromIntString: string => string =
 
 
 
-let validateWithRexp: dataOption<string> => (string => option<array<string>>) => string => dataOption<string> =
+let validateWithRexp: Data.dataOption<string> => (string => option<array<string>>) => string => Data.dataOption<string> =
   o =>
   fn =>
   msg =>
   switch o {
-  | User({ key, val }) => 
+  | Data.User({ key, val }) => 
     switch fn(val) {
     | Some(xs) => 
-      User({ key, val: xs[0] })
+      Data.User({ key, val: xs[0] })
     | None =>
-      Error({ _type: "Validator", key, val, msg })
+      Data.Error({ _type: "Validator", key, val, msg })
     }
   | t => t
   }
 
 
 
-let validateWithPred: dataOption<'a> => (string => bool) => string => dataOption<'a> =
+let validateWithPred: Data.dataOption<'a> => (string => bool) => string => Data.dataOption<'a> =
   o =>
   fn =>
   msg =>
   switch o {
-  | User({ key, val }) =>
+  | Data.User({ key, val }) =>
     fn(val) ? 
-    User({ key, val }) 
+    Data.User({ key, val }) 
     : 
-    Error({ _type: "Validator", key, val, msg })
+    Data.Error({ _type: "Validator", key, val, msg })
   | t => t
   }
 
 
 
-let validateIban: dataOption<string> => dataOption<string> =
+let validateIban: Data.dataOption<string> => Data.dataOption<string> =
   o =>
   switch o {
-  | User({ key, val }) => {
+  | Data.User({ key, val }) => {
     let codeA = Js.String2.charCodeAt(`A`, 0)
     let codeZ = Js.String2.charCodeAt(`Z`, 0)
     val
@@ -162,8 +117,8 @@ let validateIban: dataOption<string> => dataOption<string> =
     ->mod97FromString
     ->x =>
       x == 1 ? 
-      User({key, val}) 
-      : Error({
+      Data.User({ key, val }) 
+      : Data.Error({
         _type: "Validator", key, val,
         msg: "fails on the checksum: expected 1 but got " ++Belt.Int.toString(x),
       })
@@ -173,15 +128,15 @@ let validateIban: dataOption<string> => dataOption<string> =
 
 
 
-let validateQRR: dataOptionVal<string> => dataOption<string> =
+let validateQRR: Data.dataOptionVal<string> => Data.dataOption<string> =
   ({ key, val }) => {
     let valTrim = Formatter.removeWhitespace(val)
     mod10FromIntString(valTrim)
     ->a => {
         let b = Js.String2.sliceToEnd(valTrim, ~from=26)
         a == b ?
-        User({key, val: valTrim}) :
-        Error({
+        Data.User({key, val: valTrim}) :
+        Data.Error({
           _type: "Validator",
           key,
           val: valTrim,
@@ -196,9 +151,9 @@ let validateQRR: dataOptionVal<string> => dataOption<string> =
 
 
 
-let validateSCOR: dataOptionVal<string> => dataOption<string> =
+let validateSCOR: Data.dataOptionVal<string> => Data.dataOption<string> =
   ov =>
-  User(ov) //TODO: missing actual validation
+  Data.User(ov) //TODO: missing actual validation
   ->validateWithRexp(
       x => Formatter.removeWhitespace(x)->Js.String2.match_(%re("/^\S{5,25}$/")),
       "must be 5 to 25 characters long"
@@ -206,18 +161,18 @@ let validateSCOR: dataOptionVal<string> => dataOption<string> =
 
 
 
-let validateReference:  dataOption<string> => dataOption<string> => dataOption<string> =
+let validateReference:  Data.dataOption<string> => Data.dataOption<string> => Data.dataOption<string> =
   reference =>
   referenceType =>
   switch reference {
-  | User({ key, val }) =>
+  | Data.User({ key, val }) =>
     switch referenceType {
-    | User(ov) =>
+    | Data.User(ov) =>
       switch ov.val {
       | "QRR" => validateQRR({ key, val })
       | "SCOR" => validateSCOR({ key, val })
       | _ =>
-        Error({
+        Data.Error({
           _type: "Validator", key, val,
           msg: "fails as no reference type could be determined for a non-empty reference value",
         })
@@ -229,11 +184,11 @@ let validateReference:  dataOption<string> => dataOption<string> => dataOption<s
 
 
 
-let validateAddressData: dataOption<'a> => dataOption<'a> =
+let validateAddressData: Data.dataOption<Data.addressData> => Data.dataOption<Data.addressData> =
   o =>
   switch o {
-  | User({ key, val: ad }) =>
-    User({
+  | Data.User({ key, val: ad }) =>
+    Data.User({
       key,
       val: {
         addressType:
@@ -291,7 +246,7 @@ let validateAddressData: dataOption<'a> => dataOption<'a> =
 
 
 
-let validate: data => data =
+let validate: Data.data => Data.data =
   d =>
   d.referenceType
   ->validateWithRexp(
@@ -299,7 +254,7 @@ let validate: data => data =
       "must be either QRR, SCOR or NON"
     )
   ->referenceType =>
-    {
+    ({
       lang: 
         d.lang
         ->validateWithRexp(
@@ -356,4 +311,4 @@ let validate: data => data =
 
       creditor: d.creditor->validateAddressData,
       debtor: d.debtor->validateAddressData
-    }
+    } : Data.data)
