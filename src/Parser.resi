@@ -1,5 +1,1 @@
-type jsonEntry
-
-
-
-let parseJson: string => array<jsonEntry>
+let parseJson: string => Data.data

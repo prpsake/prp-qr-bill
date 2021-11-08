@@ -1,9 +1,1 @@
-type jsonEntry
-
-
-
-type entry
-
-
-
-let validateEntries: array<jsonEntry> => array<entry>
+let validate: Data.data => Data.data

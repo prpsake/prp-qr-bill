@@ -1,174 +1,80 @@
-type jsonEntry = (string, Js.Json.t)
-
-
-
-type entries =
- | User(array<jsonEntry>)
- | Default(array<jsonEntry>)
-
-
-
-let defaultRootEntries: array<jsonEntry> = {
-  open Js.Json
-  [
-    ("lang", string("en")),
-    ("currency", string("")),
-    ("amount", string("")),
-    ("iban", string("")),
-    ("reference", string("")),
-    ("message", string("")),
-    ("messageCode", string(""))
-  ]
-}
-
-
-
-let defaultAddressEntries: array<jsonEntry> = {
-  open Js.Json
-  [
-    ("name", string("")),
-    ("street", string("")),
-    ("streetNumber", string("")),
-    ("postOfficeBox", string("")),
-    ("postalCode", string("")),
-    ("locality", string("")),
-    ("countryCode", string(""))
-  ]
-}
-
-
-
-let defaultEntries: array<jsonEntry> = {
-  open Js.Json
-  defaultRootEntries
-  ->Js.Array2.concat([
-    ("creditor", object_(Js.Dict.fromArray(defaultAddressEntries))),
-    ("debtor", object_(Js.Dict.fromArray(defaultAddressEntries)))
-  ])
-}
-
-
-
-let prefixEntryKeysWith: array<jsonEntry> => string => array<jsonEntry> =
-  entries =>
+let dictGet: Js.Dict.t<Js.Json.t> => string => Data.dataOption<'a> =
+  d =>
   key =>
-  Js.Array2.map(entries, ((k, v)) => {
-    ( key
-      ++Js.String2.substring(k, ~from=0, ~to_=1) ->Js.String2.toUpperCase
-      ++Js.String2.sliceToEnd(k, ~from=1),
-      v
-    )
-  })
-
-
-
-let entryFromData: Js.Dict.t<Js.Json.t> => jsonEntry => jsonEntry =
-  data =>
-  ((k, v)) =>
-  switch Js.Dict.get(data, k) {
-  | Some(x) =>
-    switch Js.Json.classify(x) {
-    | JSONString(x) => (k, Js.Json.string(x))
-    | JSONNumber(x) => (k, Js.Json.string(Belt.Float.toString(x)))
-    | _ => (k, v)
-    }
-  | None => (k, v)
+  switch Js.Dict.get(d, key) {
+  | Some(val) => Data.User({ key, val })
+  | None => Data.None
   }
 
 
 
-let entriesFromNestedData: Js.Dict.t<Js.Json.t> => array<jsonEntry> => string => entries =
-  data =>
-  defaultNestedEntries =>
-  key =>
-  switch Js.Dict.get(data, key) {
-  | Some(x) =>
-    switch Js.Json.classify(x) {
-    | JSONObject(nestedData) =>
-      User(
-        defaultNestedEntries
-        ->Js.Array2.map(entryFromData(nestedData))
-      )
-    | _ => Default(defaultNestedEntries)
-    }
-  | None => Default(defaultNestedEntries)
-  }
-
-
-
-let referenceTypeEntryFromEntries: array<jsonEntry> => array<jsonEntry> =
-  entries =>
-  Js.Dict.fromArray(entries)
-  ->data =>
-    switch Js.Dict.get(data, "reference") {
-    | Some(x) =>
-      switch Js.Json.classify(x) {
-      | JSONString(x) => x != ""
-      | _ => false
+let parseString: Data.dataOption<Js.Json.t> => Data.dataOption<string> => Data.dataOption<string> =
+  o =>
+  dfo =>
+  switch o {
+  | Data.User({ key, val }) =>
+    switch Js.Json.classify(val) {
+    | JSONString(s) =>
+      switch Js.String.trim(s) {
+      | "" => dfo
+      | _ => Data.User({ key, val: s })  
       }
-    | None => false
+    | JSONNumber(n) => Data.User({ key, val: Js.Float.toString(n) })
+    | _ => dfo
     }
-  ->existsReferenceEntry =>
-    switch Js.Dict.get(data, "iban") {
-    | Some(x) =>
-      switch Js.Json.classify(x) {
-      | JSONString(x) =>
-        Formatter.removeWhitespace(x)
-        ->Js.String2.substring(~from=4, ~to_=5)
-        ->value =>
-          value == "3" ? "QRR"
-          : 
-          (existsReferenceEntry ? "SCOR" : "NON")
-      | _ => "NON"
-      }
-    | None => "NON"
-    }
-  ->value => [("referenceType", Js.Json.string(value))]
-  ->Js.Array2.concat(entries)
-
-
-
-let addressTypeEntryFromEntries: entries => array<jsonEntry> =
-  entries =>
-  switch entries {
-  | User(x) =>
-    Js.Array2.filter(
-      x, 
-      ((k, _)) => k == "streetNumber" || k == "postalCode"
-    )
-    ->Js.Array2.some( // QUESTION: .every ?
-        ((_, v)) =>
-        switch Js.Json.classify(v) {
-        | JSONString(v) => v != ""
-        | _ => false
-        } 
-      )
-    ->isStructured => (x, (isStructured ? "S" : "K"))
-  | Default(x) => (x, "")
+  | _ => dfo
   }
-  ->((jsonEntries, addressType)) => 
-    Js.Array2.concat(jsonEntries, [("addressType", Js.Json.string(addressType))])
 
 
 
-let rootEntriesFromData: Js.Dict.t<Js.Json.t> => array<jsonEntry> =
-  data => 
-  defaultRootEntries
-  ->Js.Array2.map(entryFromData(data))
-  ->referenceTypeEntryFromEntries
+let parseFloatString: Data.dataOption<Js.Json.t> => Data.dataOption<string> => Data.dataOption<string> =
+  o =>
+  dfo =>
+  switch o {
+  | Data.User({ key, val }) =>
+    switch Js.Json.classify(val) {
+    | JSONString(s) =>
+      switch Js.String.trim(s) {
+      | "" => dfo
+      | _ =>
+        Js.Float.fromString(s)
+        ->n => Js.Float.isNaN(n) ? dfo : Data.User({ key, val: s })
+      }
+    | JSONNumber(n) => Data.User({ key, val: Js.Float.toString(n) })
+    | _ => dfo
+    }
+  | _ => dfo
+  }
 
 
 
-let addressEntriesFromData: Js.Dict.t<Js.Json.t> => string => array<jsonEntry> =
-  data =>
-  key =>
-  entriesFromNestedData(data, defaultAddressEntries, key)
-  ->addressTypeEntryFromEntries
-  ->prefixEntryKeysWith(key)
+let chooseReferenceType =
+  reference =>
+  iban =>
+  switch reference {
+  | Data.None => Data.defaultData.referenceType
+  | _ =>
+    switch iban {
+    | Data.User({ val }) =>
+      Formatter.removeWhitespace(val)
+      ->Js.String2.substring(~from=4, ~to_=5)
+      ->x => (x == "3" ? "QRR" : "SCOR")
+      ->x => Data.User({ key: "referenceType", val: x })
+    | _ => Data.defaultData.referenceType
+    }
+  }
 
 
 
-let parseJson: string => array<jsonEntry> =
+let chooseAddressType =
+  streetNumber =>
+  postalCode =>
+  (streetNumber === Data.None || postalCode === Data.None ? "K" : "S")
+  ->val => Data.User({ key: "addressType", val })
+
+
+
+let parseJson: string => Data.data =
   str =>
   try {
     let json =
@@ -178,13 +84,72 @@ let parseJson: string => array<jsonEntry> =
       }
       ->Js.Json.parseExn
     switch Js.Json.classify(json) {
-    | JSONObject(data) =>
-      rootEntriesFromData(data)
-      ->Js.Array2.concat(addressEntriesFromData(data, "creditor"))
-      ->Js.Array2.concat(addressEntriesFromData(data, "debtor") )
-    | _ => defaultEntries //failwith("Expected an object")
+    | JSONObject(d) =>
+      let dataGet = dictGet(d)
+      let iban = dataGet("iban")->parseString(Data.defaultData.iban)
+      let reference = dataGet("reference")->parseString(Data.defaultData.reference)
+      {
+        lang: dataGet("lang")->parseString(Data.defaultData.lang),
+        currency: dataGet("currency")->parseString(Data.defaultData.currency),
+        amount: dataGet("amount")->parseFloatString(Data.defaultData.amount),
+        iban,
+        referenceType: chooseReferenceType(reference, iban),
+        reference,
+        message: dataGet("message")->parseString(Data.defaultData.message),
+        messageCode: dataGet("messageCode")->parseString(Data.defaultData.messageCode),
+        creditor:
+          switch Js.Dict.get(d, "creditor") {
+          | Some(x) =>
+            switch Js.Json.classify(x) {
+            | JSONObject(d) =>
+              let addressDataGet = dictGet(d)
+              let streetNumber = addressDataGet("streetNumber")->parseString(Data.None)
+              let postalCode = addressDataGet("postalCode")->parseString(Data.None)
+              Data.User({ 
+                key: "creditor", 
+                val: {
+                  addressType: chooseAddressType(streetNumber, postalCode),
+                  name: addressDataGet("name")->parseString(Data.None),
+                  street: addressDataGet("street")->parseString(Data.None),
+                  streetNumber,
+                  postOfficeBox: addressDataGet("postOfficeBox")->parseString(Data.None),
+                  postalCode,
+                  locality: addressDataGet("locality")->parseString(Data.None),
+                  countryCode: addressDataGet("countryCode")->parseString(Data.None)
+                }
+              })
+            | _ => Data.defaultData.creditor
+            }
+          | None => Data.defaultData.creditor
+          },
+        debtor:
+          switch Js.Dict.get(d, "debtor") {
+          | Some(x) =>
+            switch Js.Json.classify(x) {
+            | JSONObject(d) =>
+              let addressDataGet = dictGet(d)
+              let streetNumber = addressDataGet("streetNumber")->parseString(Data.None)
+              let postalCode = addressDataGet("postalCode")->parseString(Data.None)
+              Data.User({ 
+                key: "debtor", 
+                val: {
+                  addressType: chooseAddressType(streetNumber, postalCode),
+                  name: addressDataGet("name")->parseString(Data.None),
+                  street: addressDataGet("street")->parseString(Data.None),
+                  streetNumber,
+                  postOfficeBox: addressDataGet("postOfficeBox")->parseString(Data.None),
+                  postalCode,
+                  locality: addressDataGet("locality")->parseString(Data.None),
+                  countryCode: addressDataGet("countryCode")->parseString(Data.None)
+                }
+              })
+            | _ => Data.defaultData.debtor
+            }
+          | None => Data.defaultData.debtor
+          },
+      }
+    | _ => Data.defaultData //failwith("Expected an object")
     }
   } catch {
-  | _ => defaultEntries
+  | _ => Data.defaultData
   }
-  //->Js.Dict.fromArray

@@ -13,12 +13,9 @@ import { showWith, notShowWith } from './Factories.js'
 import { translate } from './Translations.bs.js'
 import * as Parser from './Parser.bs.js'
 import * as Validator from './Validator.bs.js'
+import * as Data from './Data.bs.js'
 import * as Formatter from './Formatter.bs.js'
 import * as QRCode from './QRCode.bs.js'
-
-
-import * as Parser2 from './Parser2.bs.js'
-import * as Validator2 from './Validator2.bs.js'
 
 
 
@@ -96,14 +93,17 @@ const svgQRCode =
 
 const AQRBill = {
   tag: 'a-qr-bill',
-  data: property(Parser2.parseJson, (host, key) => {
-    console.log(host[key])
-    const data = Validator2.validate(host[key])
-    console.log(data)
-    //host.qrCodeString = QRCode.stringFromEntries(entries)
-    //console.log(host.qrCodeString)
-    //entries.forEach(([k, v]) => host[k] = v)
-  }),
+  data: property(
+    json => 
+    [json]
+    .map(Parser.parseJson)
+    .map(Validator.validate)
+    .map(Data.entries)
+    [0], 
+    (host, key) => {
+      host[key].forEach(([k, v]) => host[k] = v)
+    }
+  ),
 
   version: '',
   lang: property(translate),
@@ -128,7 +128,7 @@ const AQRBill = {
 
   qrCodeString: '',
 
-  showQRCode: false,
+  showQRCode: true,
   showAmount: notShowWith({ amount: [''] }),
   showReference: showWith({ referenceType: ['QRR', 'SCOR'] }),
   showDebtor: notShowWith({ debtorName: [''], debtorAddressLine1: [''], debtorAddressLine2: [''] }),

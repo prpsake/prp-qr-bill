@@ -1,7 +1,3 @@
-type entry = (string, string)
-
-
-
 type errorCorrectionLevel = 
   [
     #L 
@@ -21,5 +17,4 @@ type pathDataOptions = {
 
 
 
-let stringFromEntries: array<entry> => string
 let pathDataFromString: string => pathDataOptions => string
