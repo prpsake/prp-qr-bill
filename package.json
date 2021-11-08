@@ -40,6 +40,7 @@
     "start": "snowpack dev",
     "build": "snowpack build",
     "re:start": "rescript build -w",
-    "re:build": "rescript"
+    "re:build": "rescript",
+    "serve:build": "python3 -m http.server --directory ./build 8080"
   }
 }
