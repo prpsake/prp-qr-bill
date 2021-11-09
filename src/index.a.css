@@ -3,6 +3,17 @@
 @tailwind utilities;
 
 
+@layer components {
+  :host {
+    @apply flex w-210 h-105 bg-white font-sans font-normal text-black;
+  }
+  
+  :host * {
+    box-sizing: border-box;
+  }
+}
+
+
 @layer utilities {
   .scissors-br,
   .scissors-tr {
@@ -26,14 +37,4 @@
     content: "\2701";
     transform: translate(-5.2mm, -1.8mm) rotate(-173deg);
   }
-}
-
-
-:host {
-  @apply flex w-210 h-105 bg-white font-sans font-normal text-black;
-}
-
-
-:host * {
-  box-sizing: border-box;
 }

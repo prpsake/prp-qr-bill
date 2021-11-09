@@ -11,7 +11,7 @@ export default {
     ['@ampire/snowpack-plugin-plugin', {
       input: ['.css'],
       output: ['.js'],
-      load: async ({ isDev, filePath}) => {
+      load: async ({ isDev, filePath }) => {
         const cmd = await execa.command(`postcss ${filePath}`)
         return `export default ${JSON.stringify(cmd.stdout)}`
       }

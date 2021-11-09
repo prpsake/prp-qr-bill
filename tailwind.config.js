@@ -18,7 +18,10 @@ const fromArray =
 
 module.exports = {
   //mode: 'jit',
-  purge: ['./src/**/*.js'],
+  purge: {
+    content: ['./src/**/*.js'],
+    options: { safelist: [':host'] }
+  },
   darkMode: false, // or 'media' or 'class'
   corePlugins: [
     'preflight',
