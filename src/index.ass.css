@@ -10,6 +10,7 @@
   
   :host * {
     box-sizing: border-box;
+    border-width: 0;
   }
 }
 

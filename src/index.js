@@ -7,7 +7,7 @@
   - Datatypes: https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-de.pdf#page=27
 */
 
-import styles from './index.a.css'
+import styles from './index.ass.css'
 import { define, html, property } from 'hybrids'
 import { showWith, notShowWith } from './Factories.js'
 import { translate } from './Translations.bs.js'

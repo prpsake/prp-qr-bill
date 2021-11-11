@@ -2,7 +2,6 @@
   "name": "@prpsake/prp-qr-bill",
   "version": "0.1.0",
   "description": "HTML QR-Bill using hybrids.js",
-  "main": "index.js",
   "private": true,
   "publishConfig": {
     "registry": " https://npm.ampire.ch/"
@@ -22,8 +21,10 @@
     "url": "https://github.com/prpsake/prp-qr-bill/issues"
   },
   "homepage": "https://github.com/prpsake/prp-qr-bill#readme",
+  "main": "dist/index.js",
+  "files": [ "dist" ],
   "devDependencies": {
-    "@ampire/snowpack-plugin-plugin": "^0.1.2",
+    "@ampire/snowpack-plugin-plugin": "^0.2.1",
     "autoprefixer": "^10.3.5",
     "execa": "^5.1.1",
     "postcss": "^8.3.7",
@@ -38,9 +39,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "snowpack dev",
-    "build": "snowpack build",
     "re:start": "rescript build -w",
     "re:build": "rescript",
-    "serve:build": "python3 -m http.server --directory ./build 8080"
+    "build": "npm run re:build && snowpack build",
+    "build:patch": "npm version patch && npm run build",
+    "build:minor": "npm version minor && npm run build",
+    "build:major": "npm version major && npm run build",
+    "serve:build": "python3 -m http.server --directory ./dist 8080"
   }
 }
