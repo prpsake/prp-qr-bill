@@ -13,6 +13,7 @@
 
 /lib/
 /src/**/*.bs.js
+/src/etc/
 .bsb.lock
 .merlin
 
