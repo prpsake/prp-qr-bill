@@ -21,7 +21,7 @@ export default {
       dest: '/demo/favicon.ico',
     },
   ],
-  exclude: ['**/*.res', '**/*.resi'],
+  exclude: ['**/*.res', '**/*.resi', '**/etc/**/*'],
   devOptions: {},
   buildOptions: {
     out: 'dist',
