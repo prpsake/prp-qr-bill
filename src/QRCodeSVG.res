@@ -27,6 +27,7 @@
 //   http://www.denso-wave.com/qrcode/faqpatent-e.html
 //
 //---------------------------------------------------------------------
+%%raw(`
 function QR8bitByte(data) {
   this.mode = QRMode.MODE_8BIT_BYTE;
   this.data = data;
@@ -1109,3 +1110,6 @@ QRCodeSVG.prototype.pathData = function () {
 export {
   QRCodeSVG
 }
+`)
+
+// TODO: fun port it

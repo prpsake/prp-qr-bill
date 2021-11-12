@@ -40,7 +40,7 @@ type code = {
 
 
 
-@module("./QRCodeSVG")
+@module("./QRCodeSVG.bs")
 @new
 external code: codeOptions => code = "QRCodeSVG"
 
