@@ -1,6 +1,6 @@
 {
   "name": "@prpsake/prp-qr-bill",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "HTML QR-Bill using hybrids.js",
   "publishConfig": {
     "@prpsake:registry": "https://npm.pkg.github.com"
