@@ -8,8 +8,8 @@
 */
 
 import styles from './index.ass.css'
-import { define, html, property } from 'hybrids'
-import { showWith, notShowWith } from './Factories.js'
+import { html, property } from 'hybrids'
+import { showWith, notShowWith } from './Helpers.js'
 import { translate } from './Translations.bs.js'
 import * as Parser from './Parser.bs.js'
 import * as Validator from './Validator.bs.js'
@@ -93,19 +93,25 @@ const svgQRCode =
 
 const AQRBill = {
   tag: 'a-qr-bill',
-  data: property(
-    json => 
-    [json]
-    .map(Parser.parseJson)
-    .map(Validator.validate)
-    .map(Data.entries)
-    [0], 
-    (host, key) => {
-      host[key].forEach(([k, v]) => host[k] = v)
+  data: {
+    ...property(
+      json =>
+      [json]
+      .map(Parser.parseJson)
+      .map(Validator.validate)
+      .map(Data.entries)
+      [0]
+    ),
+    observe(host, entries) {
+      entries.forEach(([k, v]) => host[k] = v)
+      host.showQRCode = notShowWith(host, { qrCodeString: [''] })
+      host.showAmount = notShowWith(host, { amount: [''] })
+      host.showReference = showWith(host, { referenceType: ['QRR', 'SCOR'] })
+      host.showDebtor = notShowWith(host, { debtorName: [''], debtorAddressLine1: [''], debtorAddressLine2: [''] })
+      host.showAdditionalInfo = notShowWith(host, { message: [''], messageCode: [''] })
     }
-  ),
+  },
 
-  version: '',
   lang: property(translate),
 
   currency: '',
@@ -128,11 +134,11 @@ const AQRBill = {
 
   qrCodeString: '',
 
-  showQRCode: true,
-  showAmount: notShowWith({ amount: [''] }),
-  showReference: showWith({ referenceType: ['QRR', 'SCOR'] }),
-  showDebtor: notShowWith({ debtorName: [''], debtorAddressLine1: [''], debtorAddressLine2: [''] }),
-  showAdditionalInfo: notShowWith({ message: [''], messageCode: [''] }),
+  showQRCode: false,
+  showAmount: false,
+  showReference: false,
+  showDebtor: false,
+  showAdditionalInfo: false,
 
   reduceContent: false,
 
@@ -299,4 +305,4 @@ const AQRBill = {
 
 
 
-define(AQRBill)
+export default AQRBill

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "HTML QR-Bill using hybrids.js",
   "publishConfig": {
-    "registry": " https://npm.ampire.ch/"
+    "registry": "https://npm.ampire.ch/"
   },
   "repository": {
     "type": "git",

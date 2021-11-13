@@ -1106,10 +1106,6 @@ QRCodeSVG.prototype.pathData = function () {
 
   return pathdata;
 }
-
-export {
-  QRCodeSVG
-}
 `)
 
 

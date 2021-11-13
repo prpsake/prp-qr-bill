@@ -7,13 +7,33 @@ const mode = process.env.NODE_ENV
 export default {
   mount: {
     src: '/',
-    public: { url: '/', static: true, resolve: false },
+    public: { url: '/', static: true, resolve: true },
   },
   routes: [
     {
       match: 'routes',
       src: '/',
-      dest: '/demo/index.html',
+      dest: '/demo/demo1.html',
+    },
+    {
+      match: 'routes',
+      src: '/demo2',
+      dest: '/demo/demo2.html',
+    },
+    {
+      match: 'all',
+      src: '/demo1.js',
+      dest: '/demo/demo1.js',
+    },
+    {
+      match: 'all',
+      src: '/demo2.js',
+      dest: '/demo/demo2.js',
+    },
+    {
+      match: 'all',
+      src: '/demo2.json',
+      dest: '/demo/demo2.json',
     },
     {
       match: 'all',
@@ -21,7 +41,7 @@ export default {
       dest: '/demo/favicon.ico',
     },
   ],
-  exclude: ['**/*.res', '**/*.resi', '**/etc/**/*'],
+  exclude: ['**/*.res', '**/*.resi', '**/etc/**/*', '**/demo/**/*'],
   devOptions: {},
   buildOptions: {
     out: 'dist',
