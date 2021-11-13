@@ -1,6 +1,6 @@
 {
   "name": "@prpsake/prp-qr-bill",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "HTML QR-Bill using hybrids.js",
   "publishConfig": {
     "registry": "https://npm.ampire.ch/"
@@ -21,7 +21,9 @@
   },
   "homepage": "https://github.com/prpsake/prp-qr-bill#readme",
   "main": "dist/index.js",
-  "files": [ "dist" ],
+  "files": [
+    "dist"
+  ],
   "devDependencies": {
     "@ampire/snowpack-plugin-plugin": "^0.2.1",
     "autoprefixer": "^10.3.5",
