@@ -3,7 +3,7 @@
   "version": "0.1.10",
   "description": "HTML QR-Bill using hybrids.js",
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "@gourmetseasoningsake:registry": "https://npm.pkg.github.com"
   },
   "repository": {
     "type": "git",
