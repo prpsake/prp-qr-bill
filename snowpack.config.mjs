@@ -51,7 +51,7 @@ export default {
     external: mode === "production" ? ['hybrids'] : [],
   },
   plugins: [
-    ['@ampire/snowpack-plugin-plugin', {
+    ['@gourmetseasoningsake/snowpack-plugin-plugin', {
       input: ['.css'],
       output: ['.js'],
       load: async ({ isDev, filePath }) => {
