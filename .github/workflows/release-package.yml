@@ -14,6 +14,8 @@ jobs:
           node-version: 16
       - run: npm ci
       - run: npm test
+        env:
+          GSS_NPM_TOKEN: ${{secrets.GSS_NPM_TOKEN}}
 
   publish-gpr:
     needs: build
@@ -31,4 +33,4 @@ jobs:
       - run: npm run build
       - run: npm publish
         env:
-          NODE_AUTH_TOKEN: ${{secrets.GSS_NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
