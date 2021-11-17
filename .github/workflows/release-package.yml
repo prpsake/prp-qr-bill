@@ -14,7 +14,7 @@ jobs:
           node-version: 16
       - run: npm ci
         env:
-          NODE_AUTH_TOKEN: ${{secrets.GSS_NPM_TOKEN}}
+          GSS_NPM_TOKEN: ${{secrets.GSS_NPM_TOKEN}}
       - run: npm test
 
   publish-gpr:
@@ -31,7 +31,7 @@ jobs:
           registry-url: https://npm.pkg.github.com/
       - run: npm ci
         env:
-          NODE_AUTH_TOKEN: ${{secrets.GSS_NPM_TOKEN}}
+          GSS_NPM_TOKEN: ${{secrets.GSS_NPM_TOKEN}}
       - run: npm run build
       - run: npm publish
         env:
