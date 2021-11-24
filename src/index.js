@@ -104,7 +104,7 @@ const AQRBill = {
     ),
     observe(host, entries) {
       entries.forEach(([k, v]) => host[k] = v)
-      host.showQRCode = notShowWith(host, { qrCodeString: [''] })
+      host.showQRCode = false //notShowWith(host, { qrCodeString: [''] })
       host.showAmount = notShowWith(host, { amount: [''] })
       host.showReference = showWith(host, { referenceType: ['QRR', 'SCOR'] })
       host.showDebtor = notShowWith(host, { debtorName: [''], debtorAddressLine1: [''], debtorAddressLine2: [''] })

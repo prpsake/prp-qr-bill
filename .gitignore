@@ -3,6 +3,7 @@
 src/**/*.bs.js
 .bsb.lock
 .merlin
+.env
 
 node_modules/
 coverage/

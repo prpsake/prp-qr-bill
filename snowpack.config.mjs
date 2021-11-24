@@ -54,6 +54,9 @@ export default {
     ['@gourmetseasoningsake/snowpack-plugin-plugin', {
       input: ['.css'],
       output: ['.js'],
+      config: x => {
+        return x
+      },
       load: async ({ isDev, filePath }) => {
         const cmd = await execa.command(`postcss ${filePath}`)
         let stdout = cmd.stdout
