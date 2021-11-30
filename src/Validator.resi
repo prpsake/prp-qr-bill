@@ -1,0 +1,1 @@
+let validate: Data.data => Data.data

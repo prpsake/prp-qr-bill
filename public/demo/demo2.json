@@ -1,0 +1,22 @@
+{
+  "lang": "it",
+  "currency": "CHF",
+  "amount": "1098",
+  "iban": "CH1509000000152034087",
+  "message": "Rechnung #02521",
+  "creditor": {
+    "name": "Jérôme Imfeld",
+    "street": "Grätzlistrasse",
+    "streetNumber": 3,
+    "locality": "8152 Opfikon",
+    "countryCode": "CH"
+  },
+  "debtor": {
+    "name": "Jungle Folk GmbH",
+    "street": "Sihlquai",
+    "streetNumber": "55b",
+    "postalCode": "8005",
+    "locality": "Zürich",
+    "countryCode": "CH"
+  }
+}

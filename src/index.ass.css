@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer components {
+  :host {
+    @apply flex w-210 h-105 bg-white font-sans font-normal text-black;
+  }
+  
+  :host * {
+    box-sizing: border-box;
+    border-width: 0;
+  }
+}
+
+
+@layer utilities {
+  .scissors-br,
+  .scissors-tr {
+    position: relative;
+  }
+
+  .scissors-br:before {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    content: "\2701";
+    transform: translate(1mm, -4.65mm) rotate(-83deg);
+  }
+
+  .scissors-tr:before {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    content: "\2701";
+    transform: translate(-5.2mm, -1.8mm) rotate(-173deg);
+  }
+}

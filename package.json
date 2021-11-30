@@ -1,0 +1,46 @@
+{
+  "name": "@prpsake/prp-qr-bill",
+  "version": "1.0.1",
+  "description": "HTML QR-Bill using hybrids.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/prpsake/prp-qr-bill.git"
+  },
+  "keywords": [
+    "HTML",
+    "QR-Bill",
+    "hybrids.js"
+  ],
+  "author": "gourmetseasoningsake",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/prpsake/prp-qr-bill/issues"
+  },
+  "homepage": "https://github.com/prpsake/prp-qr-bill#readme",
+  "module": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@gourmetseasoningsake/snowpack-plugin-plugin": "^1.1.3",
+    "autoprefixer": "^10.3.5",
+    "execa": "^5.1.1",
+    "postcss": "^8.4.4",
+    "postcss-cli": "^8.3.1",
+    "rescript": "^9.1.4",
+    "snowpack": "^3.8.8",
+    "tailwindcss": "^2.2.15"
+  },
+  "peerDependencies": {
+    "hybrids": "^6.1.0"
+  },
+  "scripts": {
+    "test": "exit 0",
+    "start": "snowpack dev",
+    "re:start": "rescript build -w",
+    "re:build": "rescript",
+    "build": "npm run re:build && snowpack build",
+    "postpublish:ampire": "npm publish --ignore-scripts --registry=https://npm.ampire.ch/",
+    "postpublish": "npm run postpublish:ampire"
+  }
+}
