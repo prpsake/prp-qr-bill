@@ -1,4 +1,4 @@
-import execa from 'execa'
+import { execaCommand } from 'execa'
 
 
 const mode = process.env.NODE_ENV
@@ -58,7 +58,7 @@ export default {
         return x
       },
       load: async ({ isDev, filePath }) => {
-        const cmd = await execa.command(`postcss ${filePath}`)
+        const cmd = await execaCommand(`postcss ${filePath}`)
         let stdout = cmd.stdout
         if (!isDev) {
           stdout = 
