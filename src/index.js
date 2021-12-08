@@ -8,8 +8,8 @@
 */
 
 import styles from './index.ass.css'
-import { html, property } from 'hybrids'
-import { showWith, notShowWith } from './Helpers.js'
+import { define, html } from 'hybrids'
+import { showWith, notShowWith, fn } from './Helpers.js'
 import { translate } from './Translations.bs.js'
 import * as Parser from './Parser.bs.js'
 import * as Validator from './Validator.bs.js'
@@ -91,17 +91,17 @@ const svgQRCode =
 
 
 
-const AQRBill = {
+export default define({
   tag: 'a-qr-bill',
   data: {
-    ...property(
-      json =>
+    set(_, json) {
+      return (
       [json]
       .map(Parser.parseJson)
       .map(Validator.validate)
       .map(Data.entries)
       [0]
-    ),
+    )},
     observe(host, entries) {
       entries.forEach(([k, v]) => host[k] = v)
       host.showQRCode = false //notShowWith(host, { qrCodeString: [''] })
@@ -112,13 +112,13 @@ const AQRBill = {
     }
   },
 
-  lang: property(translate),
+  lang: fn(translate),
 
   currency: '',
-  amount: property(Formatter.moneyFromNumberStr2),
-  iban: property(Formatter.blockStr4),
+  amount: fn(Formatter.moneyFromNumberStr2),
+  iban: fn(Formatter.blockStr4),
   referenceType: '',
-  reference: property(Formatter.referenceBlockStr),
+  reference: fn(Formatter.referenceBlockStr),
   message: '', // Notification (unstructred)
   messageCode: '', // Bill Information (structured)
 
@@ -301,8 +301,4 @@ const AQRBill = {
   </div>
 
   `.style(styles)
-}
-
-
-
-export default AQRBill
+})

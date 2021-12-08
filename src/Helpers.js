@@ -38,4 +38,8 @@ const notShowWith =
 
 
 
-export { showWith, notShowWith }
+const fn = f => ({ set: (_, value) => f(value) })
+
+
+
+export { showWith, notShowWith, fn }
