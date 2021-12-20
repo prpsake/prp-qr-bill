@@ -1,6 +1,6 @@
 {
   "name": "@prpsake/prp-qr-bill",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "HTML QR-Bill using hybrids.js",
   "repository": {
     "type": "git",
