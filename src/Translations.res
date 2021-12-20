@@ -12,15 +12,6 @@ https://forum.rescript-lang.org/t/unicode-guidance/2389
 */
 
 
-type lang =
-  [
-    #en
-  | #de
-  | #fr
-  | #it
-  ]
-
-
 
 type translation =
   {
@@ -105,14 +96,3 @@ let translations =
     ultimateCreditorHeading: `A favore di`
   }
 }
-
-
-
-let translate: lang => translation =
-  lang =>
-  switch lang {
-  | #en => translations["en"]
-  | #de => translations["de"]
-  | #fr => translations["fr"]
-  | #it => translations["it"]
-  }
