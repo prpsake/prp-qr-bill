@@ -1,7 +1,6 @@
 import styles from "./index.ass.css"
 import { define, html } from "hybrids"
-import { fn } from "./Helpers.js"
-import { translate } from "./Translations.bs.js"
+import { translations as tr } from "./Translations.bs.js"
 import * as QRCode from "./QRCode.bs.js"
 
 
@@ -80,15 +79,15 @@ const svgQRCode =
 
 export default define({
   tag: "a-qr-bill",
-  lang: fn(translate),
+  lang: "en",
 
   currency: "",
   amount: "",
   iban: "",
   referenceType: "",
   reference: "",
-  message: "", // Notification (unstructred)
-  messageCode: "", // Bill Information (structured)
+  message: "",
+  messageCode: "",
 
   creditorName: "",
   creditorAddressLine1: "",
@@ -142,10 +141,10 @@ export default define({
 
   <div class="w-62 p-5 border-t border-r border-dashed border-black scissors-br">
 
-    <div class="h-7 font-bold text-11 leading-none">${lang.receiptTitle}</div>
+    <div class="h-7 font-bold text-11 leading-none">${tr[lang].receiptTitle}</div>
 
     <div class="h-56">
-      <div class="font-bold text-6 leading-9">${lang.creditorHeading}</div>
+      <div class="font-bold text-6 leading-9">${tr[lang].creditorHeading}</div>
       <div class="text-8 leading-9 mb-line-9">
         <div>${iban}</div>
         <div>${creditorName}</div>
@@ -154,14 +153,14 @@ export default define({
       </div>
 
       ${showReference && html`
-        <div class="font-bold text-6 leading-9">${lang.referenceHeading}</div>
+        <div class="font-bold text-6 leading-9">${tr[lang].referenceHeading}</div>
         <div class="text-8 leading-9 mb-line-9">
           <div>${reference}</div>
         </div>
       `}
 
       <div class="font-bold text-6 leading-9">
-        ${showDebtor ? lang.debtorHeading : lang.debtorFieldHeading}
+        ${showDebtor ? tr[lang].debtorHeading : tr[lang].debtorFieldHeading}
       </div>
       ${showDebtor ? html`
         <div class="text-8 leading-9">
@@ -174,12 +173,12 @@ export default define({
 
     <div class="h-14 flex">
       <div class="flex-shrink w-22">
-        <div class="font-bold text-6 leading-9">${lang.currencyHeading}</div>
+        <div class="font-bold text-6 leading-9">${tr[lang].currencyHeading}</div>
         <div class="text-8 leading-9">${currency}</div>
       </div>
 
       <div class=${{ "flex-grow": true, flex: !showAmount }}>
-        <div class="font-bold text-6 leading-9">${lang.amountHeading}</div>
+        <div class="font-bold text-6 leading-9">${tr[lang].amountHeading}</div>
         ${showAmount ? 
           html`<div class="text-8 leading-9">${amount}</div>` : 
           svgBlankField(30, 10, { marginTop: "2pt", marginLeft: "4pt" })
@@ -187,13 +186,13 @@ export default define({
       </div>
     </div>
 
-    <div class="h-18 font-bold text-6 text-right">${lang.acceptancePointHeading}</div>
+    <div class="h-18 font-bold text-6 text-right">${tr[lang].acceptancePointHeading}</div>
   </div>
 
   <div class="w-148 p-5 border-t border-dashed border-black scissors-tr">
     <div class="h-85 flex">
       <div class="w-51">
-        <div class="h-7 font-bold text-11 leading-none">${lang.paymentPartTitle}</div>
+        <div class="h-7 font-bold text-11 leading-none">${tr[lang].paymentPartTitle}</div>
 
         <div class="h-56 py-5 pr-5">
           ${showQRCode ? 
@@ -205,20 +204,20 @@ export default define({
         ${showAmount ? html`
           <div class="h-22 flex">
             <div class="flex-shrink w-22">
-              <div class="font-bold text-8 leading-11">${lang.currencyHeading}</div>
+              <div class="font-bold text-8 leading-11">${tr[lang].currencyHeading}</div>
               <div class="text-10 leading-11">${currency}</div>
             </div>
 
             <div class="flex-grow">
-              <div class="font-bold text-8 leading-11">${lang.amountHeading}</div>
+              <div class="font-bold text-8 leading-11">${tr[lang].amountHeading}</div>
               <div class="text-10 leading-11">${amount}</div>
             </div>
           </div>    
         ` : html`
           <div class="h-22">
             <div class="flex font-bold text-8 leading-11">
-              <div class="mr-line-7">${lang.currencyHeading}</div>
-              <div>${lang.amountHeading}</div>
+              <div class="mr-line-7">${tr[lang].currencyHeading}</div>
+              <div>${tr[lang].amountHeading}</div>
             </div>
             <div class="flex">
               <div class="text-10 leading-11 mr-line-9">${currency}</div>
@@ -229,7 +228,7 @@ export default define({
       </div>
 
       <div class="w-87">
-        <div class="font-bold text-8 leading-11">${lang.creditorHeading}</div>
+        <div class="font-bold text-8 leading-11">${tr[lang].creditorHeading}</div>
         <div class="text-10 leading-11 mb-line-11">
           <div>${iban}</div>
           <div>${creditorName}</div>
@@ -238,14 +237,14 @@ export default define({
         </div>
 
         ${showReference && html`
-          <div class="font-bold text-8 leading-11">${lang.referenceHeading}</div>
+          <div class="font-bold text-8 leading-11">${tr[lang].referenceHeading}</div>
           <div class="text-10 leading-11 mb-line-11">
             <div>${reference}</div>
           </div>
         `}
 
         ${showAdditionalInfo && html`
-          <div class="font-bold text-8 leading-11">${lang.additionalInfoHeading}</div>
+          <div class="font-bold text-8 leading-11">${tr[lang].additionalInfoHeading}</div>
           <div class="text-10 leading-11 mb-line-11">
             ${message && html`<div>${message}</div>`}
             ${messageCode && html`<div>${messageCode}</div>`}
@@ -253,7 +252,7 @@ export default define({
         `}
 
         <div class="font-bold text-8 leading-11">
-          ${showDebtor ? lang.debtorHeading : lang.debtorFieldHeading}
+          ${showDebtor ? tr[lang].debtorHeading : tr[lang].debtorFieldHeading}
         </div>
         ${showDebtor ? html`
           <div class="text-10 leading-11">
