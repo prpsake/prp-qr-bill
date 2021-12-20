@@ -1,31 +1,18 @@
-/*
-
-  Links:
-  https://www.paymentstandards.ch/dam/downloads/style-guide-en.pdf
-  https://www.paymentstandards.ch/de/shared/communication-grid.html
-  https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-de.pdf
-  - Datatypes: https://www.paymentstandards.ch/dam/downloads/ig-qr-bill-de.pdf#page=27
-*/
-
-import styles from './index.ass.css'
-import { define, html } from 'hybrids'
-import { showWith, notShowWith, fn } from './Helpers.js'
-import { translate } from './Translations.bs.js'
-import * as Parser from './Parser.bs.js'
-import * as Validator from './Validator.bs.js'
-import * as Data from './Data.bs.js'
-import * as Formatter from './Formatter.bs.js'
-import * as QRCode from './QRCode.bs.js'
+import styles from "./index.ass.css"
+import { define, html } from "hybrids"
+import { fn } from "./Helpers.js"
+import { translate } from "./Translations.bs.js"
+import * as QRCode from "./QRCode.bs.js"
 
 
 
 /* NB: 
    stroke-width 0.4 (mm) is a visual approximation.
    Style-guide states 0.75pt which is 0.2635 or so, but looks
-   too thin compared to the example in the guide.
+   way too thin compared to the example in the guide.
 */
 const svgBlankField = 
-  (width, height, styles = {}) => 
+  (width = 3, height = 3, styles = {}) => 
   html`
   <svg 
     viewBox="0 0 ${width} ${height}"
@@ -92,47 +79,28 @@ const svgQRCode =
 
 
 export default define({
-  tag: 'a-qr-bill',
-  data: {
-    set(_, json) {
-      return (
-      [json]
-      .map(Parser.parseJson)
-      .map(Validator.validate)
-      .map(Data.entries)
-      [0]
-    )},
-    observe(host, entries) {
-      entries.forEach(([k, v]) => host[k] = v)
-      host.showQRCode = false //notShowWith(host, { qrCodeString: [''] })
-      host.showAmount = notShowWith(host, { amount: [''] })
-      host.showReference = showWith(host, { referenceType: ['QRR', 'SCOR'] })
-      host.showDebtor = notShowWith(host, { debtorName: [''], debtorAddressLine1: [''], debtorAddressLine2: [''] })
-      host.showAdditionalInfo = notShowWith(host, { message: [''], messageCode: [''] })
-    }
-  },
-
+  tag: "a-qr-bill",
   lang: fn(translate),
 
-  currency: '',
-  amount: fn(Formatter.moneyFromNumberStr2),
-  iban: fn(Formatter.blockStr4),
-  referenceType: '',
-  reference: fn(Formatter.referenceBlockStr),
-  message: '', // Notification (unstructred)
-  messageCode: '', // Bill Information (structured)
+  currency: "",
+  amount: "",
+  iban: "",
+  referenceType: "",
+  reference: "",
+  message: "", // Notification (unstructred)
+  messageCode: "", // Bill Information (structured)
 
-  creditorName: '',
-  creditorAddressLine1: '',
-  creditorAddressLine2: '',
-  creditorCountryCode: '',
+  creditorName: "",
+  creditorAddressLine1: "",
+  creditorAddressLine2: "",
+  creditorCountryCode: "",
 
-  debtorName: '',
-  debtorAddressLine1: '',
-  debtorAddressLine2: '',
-  debtorCountryCode: '',
+  debtorName: "",
+  debtorAddressLine1: "",
+  debtorAddressLine2: "",
+  debtorCountryCode: "",
 
-  qrCodeString: '',
+  qrCodeString: "",
 
   showQRCode: false,
   showAmount: false,
@@ -201,7 +169,7 @@ export default define({
           ${!reduceContent && html`<div>${debtorAddressLine1}</div>`}
           <div>${debtorAddressLine2}</div>
         </div>
-      ` : svgBlankField(52, 20, { marginTop: '.8pt' })}
+      ` : svgBlankField(52, 20, { marginTop: ".8pt" })}
     </div>
 
     <div class="h-14 flex">
@@ -210,11 +178,11 @@ export default define({
         <div class="text-8 leading-9">${currency}</div>
       </div>
 
-      <div class=${{ 'flex-grow': true, flex: !showAmount }}>
+      <div class=${{ "flex-grow": true, flex: !showAmount }}>
         <div class="font-bold text-6 leading-9">${lang.amountHeading}</div>
         ${showAmount ? 
           html`<div class="text-8 leading-9">${amount}</div>` : 
-          svgBlankField(30, 10, { marginTop: '2pt', marginLeft: '4pt' })
+          svgBlankField(30, 10, { marginTop: "2pt", marginLeft: "4pt" })
         }
       </div>
     </div>
@@ -254,7 +222,7 @@ export default define({
             </div>
             <div class="flex">
               <div class="text-10 leading-11 mr-line-9">${currency}</div>
-              ${svgBlankField(40, 15, { marginTop: '1.6pt' })}
+              ${svgBlankField(40, 15, { marginTop: "1.6pt" })}
             </div>
           </div>
         `}
@@ -293,7 +261,7 @@ export default define({
             <div>${debtorAddressLine1}</div>
             <div>${debtorAddressLine2}</div>
           </div>
-        ` : svgBlankField(65, 25, { marginTop: '1.1pt' })}
+        ` : svgBlankField(65, 25, { marginTop: "1.1pt" })}
       </div>
 
     </div>

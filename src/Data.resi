@@ -52,3 +52,7 @@ let defaultData: data
 
 
 let entries: data => array<(string, string)>
+
+
+
+let object: data => Js.Dict.t<string>
