@@ -30,13 +30,13 @@ const QRBillData = {
     get: () => 
       fetch("demo.json")
       .then(data => data.json())
-      .then(json => Object.fromEntries(
+      .then(json =>
         [json]
         .map(Parser.parseJson)
         .map(Validator.validate)
-        .map(Data.entries)
+        .map(Data.object)
         [0]
-      )),
+      ),
     set: (_, values) => values
   }
 }

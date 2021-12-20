@@ -207,3 +207,7 @@ let entries: data => array<(string, string)> =
     ->addressEntries("debtor")
     ->Js.Array2.concat(xs)
   ->addQrCodeStringFromEntries
+
+
+
+let object: data => Js.Dict.t<string> = d => entries(d)->Js.Dict.fromArray
