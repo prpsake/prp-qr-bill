@@ -1,4 +1,4 @@
-import { execaCommand } from 'execa'
+import { execaCommand } from "execa"
 
 
 const mode = process.env.NODE_ENV
@@ -6,54 +6,44 @@ const mode = process.env.NODE_ENV
 
 export default {
   mount: {
-    src: '/',
-    public: { url: '/', static: true, resolve: true },
+    src: "/",
+    public: { url: "/", static: true, resolve: true },
   },
   routes: [
     {
-      match: 'routes',
-      src: '/',
-      dest: '/demo/demo1.html',
+      match: "routes",
+      src: "/",
+      dest: "/demo/demo.html",
     },
     {
-      match: 'routes',
-      src: '/demo2',
-      dest: '/demo/demo2.html',
+      match: "all",
+      src: "/demo.js",
+      dest: "/demo/demo.js",
     },
     {
-      match: 'all',
-      src: '/demo1.js',
-      dest: '/demo/demo1.js',
+      match: "all",
+      src: "/demo.json",
+      dest: "/demo/demo.json",
     },
     {
-      match: 'all',
-      src: '/demo2.js',
-      dest: '/demo/demo2.js',
-    },
-    {
-      match: 'all',
-      src: '/demo2.json',
-      dest: '/demo/demo2.json',
-    },
-    {
-      match: 'all',
-      src: '/favicon.ico',
-      dest: '/demo/favicon.ico',
+      match: "all",
+      src: "/favicon.ico",
+      dest: "/demo/favicon.ico",
     },
   ],
-  exclude: ['**/*.res', '**/*.resi', '**/etc/**/*', '**/demo/**/*'],
+  exclude: ["**/*.res", "**/*.resi", "**/etc/**/*", "**/demo/**/*"],
   devOptions: {},
   buildOptions: {
-    out: 'dist',
-    metaUrlPath: 'lib',
+    out: "dist",
+    metaUrlPath: "lib",
   },
   packageOptions: {
-    external: mode === "production" ? ['hybrids'] : [],
+    external: mode === "production" ? ["hybrids"] : [],
   },
   plugins: [
-    ['@gourmetseasoningsake/snowpack-plugin-plugin', {
-      input: ['.css'],
-      output: ['.js'],
+    ["@gourmetseasoningsake/snowpack-plugin-plugin", {
+      input: [".css"],
+      output: [".js"],
       config: x => {
         return x
       },
@@ -63,15 +53,15 @@ export default {
         if (!isDev) {
           stdout = 
           stdout
-          .replace(/(\/\*[\s\S]+\*\/|\n)/g, ' ')
-          .replace(/\s{2,}/g, ' ')
+          .replace(/(\/\*[\s\S]+\*\/|\n)/g, " ")
+          .replace(/\s{2,}/g, " ")
         }
         return `export default ${JSON.stringify(stdout)}`
       }
     }]
   ],
   optimize: {
-    entrypoints: ['src/index.js'],
-    target: 'es2020',
+    entrypoints: ["src/index.js"],
+    target: "es2020",
   },
 }
