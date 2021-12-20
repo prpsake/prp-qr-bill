@@ -18,6 +18,14 @@
   },
   "homepage": "https://github.com/prpsake/prp-qr-bill#readme",
   "module": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./Helpers": "./dist/Helpers.js",
+    "./Parser": "./dist/Parser.bs.js",
+    "./Validator": "./dist/Validator.bs.js",
+    "./Data": "./dist/Data.bs.js",
+    "./Formatter": "./dist/Formatter.bs.js"
+  },
   "files": [
     "dist"
   ],
